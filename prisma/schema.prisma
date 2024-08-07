@@ -1,0 +1,264 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// 用户表
+model User {
+  id         Int      @id @default(autoincrement())
+  // 用户昵称
+  name       String
+  // 用户姓名
+  username   String
+  password   String
+  phone      String?
+  roleName   String?
+  createTime DateTime @default(now()) @map("createTime")
+  updateTime DateTime @updatedAt @map("updateTime")
+
+  @@map("user")
+}
+
+// 角色表
+model Role {
+  id         Int        @id @default(autoincrement())
+  roleName   String     @unique
+  remark     String?
+  createTime DateTime   @default(now()) @map("createTime")
+  updateTime DateTime   @updatedAt @map("updateTime")
+  RoleMenu   RoleMenu[]
+
+  @@map("role")
+}
+
+// 菜单表
+model Menu {
+  id     Int      @id @default(autoincrement())
+  name   String
+  pid    Int
+  // 1 菜单 2 按钮
+  type   Int
+  status String?
+  level  Int
+  select Boolean?
+  // 后面两个没什么用
+  code   String
+  toCode String?
+
+  createTime DateTime   @default(now()) @map("createTime")
+  updateTime DateTime   @updatedAt @map("updateTime")
+  RoleMenu   RoleMenu[]
+
+  @@map("menu")
+}
+
+// 品牌表
+model Trademark {
+  id         Int      @id @default(autoincrement())
+  tmName     String
+  logoUrl    String
+  createTime DateTime @default(now()) @map("createTime")
+  updateTime DateTime @updatedAt @map("updateTime")
+
+  @@map("trademark")
+}
+
+// 商品分类表
+model Category {
+  id    Int    @id @default(autoincrement())
+  name  String
+  pid   Int
+  level Int    @default(1)
+
+  createTime DateTime @default(now()) @map("createTime")
+  updateTime DateTime @updatedAt @map("updateTime")
+
+  attrs Attr[]
+
+  @@map("category")
+}
+
+// 商品属性表
+model Attr {
+  id            Int    @id @default(autoincrement())
+  attrName      String
+  categoryId    Int
+  categoryLevel Int    @default(3) //级别默认设置3，因为只有3级分类才能查出属性
+
+  createTime DateTime @default(now()) @map("createTime")
+  updateTime DateTime @updatedAt @map("updateTime")
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  attrValue AttrValue[]
+
+  @@map("attr")
+}
+
+// 商品属性值表
+model AttrValue {
+  id        Int    @id @default(autoincrement())
+  valueName String
+  attrId    Int
+
+  createTime DateTime @default(now()) @map("createTime")
+  updateTime DateTime @updatedAt @map("updateTime")
+  attr       Attr     @relation(fields: [attrId], references: [id], onDelete: Cascade)
+
+  @@map("attr_value")
+}
+
+// SPU
+model Spu {
+  id          Int     @id @default(autoincrement())
+  spuName     String
+  description String?
+  category3Id Int
+  tmId        Int?
+
+  spuImageList    SpuImg[]
+  spuSaleAttrList SaleAttr[]
+
+  createTime DateTime @default(now()) @map("createTime")
+  updateTime DateTime @updatedAt @map("updateTime")
+
+  @@map("spu")
+}
+
+// spu图片
+model SpuImg {
+  id      Int     @id @default(autoincrement())
+  imgName String
+  imgUrl  String
+  name    String?
+  url     String?
+
+  createTime DateTime @default(now()) @map("createTime")
+  updateTime DateTime @updatedAt @map("updateTime")
+  spu        Spu?     @relation(fields: [spuId], references: [id], onDelete: Cascade)
+  spuId      Int?
+
+  @@map("spu_img")
+}
+
+// spu属性
+model SaleAttr {
+  id                   Int             @id @default(autoincrement())
+  baseSaleAttrId       String
+  saleAttrName         String
+  flag                 Boolean?
+  saleAttrValue        String?
+  spuSaleAttrValueList SaleAttrValue[]
+
+  createTime DateTime @default(now()) @map("createTime")
+  updateTime DateTime @updatedAt @map("updateTime")
+  spu        Spu?     @relation(fields: [spuId], references: [id], onDelete: Cascade)
+  spuId      Int?
+
+  @@map("sale_attr")
+}
+
+// spu属性值
+model SaleAttrValue {
+  id                Int      @id @default(autoincrement())
+  spuId             Int?
+  baseSaleAttrId    String
+  saleAttrValueName String
+  saleAttrName      String?
+  isChecked         Boolean?
+
+  createTime DateTime  @default(now()) @map("createTime")
+  updateTime DateTime  @updatedAt @map("updateTime")
+  saleAttr   SaleAttr? @relation(fields: [saleAttrId], references: [id], onDelete: Cascade)
+  saleAttrId Int?
+
+  @@map("sale_attr_value")
+}
+
+// sku
+model Sku {
+  id                   Int           @id @default(autoincrement())
+  category3Id          Int
+  spuId                Int
+  tmId                 Int?
+  price                Float
+  skuName              String
+  skuDesc              String?
+  weight               Float?
+  skuDefaultImg        String?
+  isSale               Int?          @default(0)
+  skuAttrValueList     SkuAttr[]
+  skuSaleAttrValueList SkuSaleAttr[]
+  skuImageList         SkuImg[]
+
+  createTime DateTime @default(now()) @map("createTime")
+  updateTime DateTime @updatedAt @map("updateTime")
+
+  @@map("sku")
+}
+
+// sku属性
+model SkuAttr {
+  id      Int  @id @default(autoincrement())
+  attrId  Int
+  valueId Int
+  Sku     Sku? @relation(fields: [skuId], references: [id], onDelete: Cascade)
+  skuId   Int?
+
+  @@map("sku_attr")
+}
+
+// sku销售属性
+model SkuSaleAttr {
+  id              Int  @id @default(autoincrement())
+  saleAttrId      Int
+  saleAttrValueId Int
+  Sku             Sku? @relation(fields: [skuId], references: [id], onDelete: Cascade)
+  skuId           Int?
+
+  @@map("sku_sale_attr")
+}
+
+// sku图片
+model SkuImg {
+  id        Int     @id @default(autoincrement())
+  isDefault String?
+  spuImgId  Int
+  Sku       Sku?    @relation(fields: [skuId], references: [id], onDelete: Cascade)
+  skuId     Int?
+
+  createTime DateTime @default(now()) @map("createTime")
+  updateTime DateTime @updatedAt @map("updateTime")
+
+  @@map("sku_img")
+}
+
+// spu基础销售属性
+model BaseSaleAttr {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  createTime DateTime @default(now()) @map("createTime")
+  updateTime DateTime @updatedAt @map("updateTime")
+
+  @@map("base_sale_attr")
+}
+
+model RoleMenu {
+  id     Int  @id @default(autoincrement())
+  roleId Int
+  menuId Int
+  role   Role @relation(fields: [roleId], references: [id])
+  menu   Menu @relation(fields: [menuId], references: [id])
+
+  @@map("role_menu")
+}
