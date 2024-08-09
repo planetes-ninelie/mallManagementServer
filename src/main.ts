@@ -24,6 +24,6 @@ async function bootstrap() {
   app.useGlobalFilters(new AllExceptionsFilter(), new HttpExceptionFilter(), new PrismaExceptionFilter());
   // 设置静态资源目录 //http://localhost:3000/uploads/avatar.jpg
   app.useStaticAssets(join(__dirname, '/../upload'), { prefix: '/upload' });
-  await app.listen(3000);
+  await app.listen(2306);
 }
 bootstrap();
