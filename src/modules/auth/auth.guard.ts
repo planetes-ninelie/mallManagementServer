@@ -13,7 +13,7 @@ export class AuthGuard implements CanActivate {
     private jwtService: JwtService,
     private reflector: Reflector,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-  ) {}
+  ) { }
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [context.getHandler(), context.getClass()]);
     if (isPublic) {
@@ -23,27 +23,27 @@ export class AuthGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest();
 
-    if (!request.headers.token) {
-      throw new UnauthorizedException('token无效');
-    }
+    // if (!request.headers.token) {
+    //   throw new UnauthorizedException('token无效');
+    // }
 
     const token = extractTokenFromHeader(request);
-    if (!token) {
-      throw new UnauthorizedException();
-    }
+    // if (!token) {
+    //   throw new UnauthorizedException();
+    // }
 
-    const cacheToken = await this.cacheManager.get(token);
+    // const cacheToken = await this.cacheManager.get(token);
 
-    if (!cacheToken) {
-      throw new UnauthorizedException('token已过期');
-    }
+    // if (!cacheToken) {
+    //   throw new UnauthorizedException('token已过期');
+    // }
 
     try {
       request['user'] = await this.jwtService.verifyAsync(token, {
         secret: jwtConstants.secret,
       });
     } catch (e) {
-      throw new UnauthorizedException();
+      //throw new UnauthorizedException();
     }
     return true;
   }

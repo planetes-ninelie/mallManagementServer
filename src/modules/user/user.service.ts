@@ -1,24 +1,32 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { successList } from 'src/utils/response';
 import { PrismaService } from '../prisma/prisma.service';
 import { ICreateUser, IUpdateUser } from './interface';
+import { error } from 'node:console';
+import { HttpStatus } from '@nestjs/common'
 
 @Injectable()
 export class UserService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
   /**
    * 创建一个新的用户。
    * @param body - 包含用户创建信息的对象，例如姓名、邮箱等。这个对象来自于ICreateUser接口。
    * @returns 返回通过Prisma ORM创建的用户实例。
    */
-  create(body: ICreateUser) {
-    // 删除createUser对象中的id属性，因为id应该是由系统自动生成的。
-    delete body.id;
-    // 使用Prisma客户端创建一个新的用户。
-    return this.prisma.user.create({
-      data: body,
-    });
+  async create(body: ICreateUser) {
+    const user = await this.findByUsername(body.username);
+    if (!user) {
+      // 删除createUser对象中的id属性，因为id应该是由系统自动生成的。
+      delete body.id;
+      // 使用Prisma客户端创建一个新的用户。
+      return this.prisma.user.create({
+        data: body,
+      });
+      // return user
+    } else {
+      throw new HttpException(`用户名 ${body.username} 已经存在，请选择其他用户名`, HttpStatus.OK)
+    }
   }
 
   /**
