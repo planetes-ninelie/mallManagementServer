@@ -1,30 +1,27 @@
 import { Request } from 'express';
 import { createHash } from 'node:crypto';
+import moment from 'moment';
 
 /**
- * 将时间戳转换为ISO格式的日期字符串。
- * @param time - 需要转换的时间戳，单位为毫秒。
- * @returns 返回一个表示指定时间的ISO格式字符串。
- */
-export function timeToISO(time: string) {
-  return new Date(time).toISOString();
-}
-/**
- * 将ISO格式日期字符串转换为"yyyy-MM-dd HH:mm:ss"格式。
- * @param isoDate - 待转换的ISO格式日期字符串。
+ * 用于格式化日期时间的函数
+ * @param dateTime
  * @returns 返回一个表示指定日期和时间的"yyyy-MM-dd HH:mm:ss"格式字符串。
  */
-export function isoToYYYYMMDDHHmmss(isoDate: string | Date): string {
-  const date = new Date(isoDate);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const seconds = String(date.getSeconds()).padStart(2, '0');
-
-  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+export function formatDateTime(dateTime: Date): string {
+  return moment(dateTime).format('YYYY-MM-DD HH:mm:ss');
 }
+
+/**
+ * 对含有时间的数组对象进行处理
+ */
+export function formatDao(obj:any[]):object {
+  return obj.map((item) => ({
+    ...item,
+    createTime: formatDateTime(obj?.createTime),
+    updateTime: formatDateTime(obj?.updateTime),
+  }));
+}
+
 
 /**
  * 计算字符串的MD5哈希值
@@ -116,11 +113,13 @@ export function generateMenuToTree<T extends { id: number; pid: number }>(menus:
     .map((menu) => {
       // 递归调用，为当前菜单项生成子菜单项
       const children = generateMenuToTree(menus, menu.id);
+      const formatMenu = {
+        ...menu ,
+        createTime: formatDateTime(menu?.createTime),
+        updateTime: formatDateTime(menu?.updateTime)
+      }
       // 返回包含子菜单项的菜单项对象
-      return {
-        ...menu,
-        children,
-      };
+      return { ...formatMenu, children}
     });
 }
 

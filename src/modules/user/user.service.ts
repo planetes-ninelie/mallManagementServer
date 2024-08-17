@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { ICreateUser, IUpdateUser } from './interface';
 import { error } from 'node:console';
 import { HttpStatus } from '@nestjs/common'
+import { formatDao } from '../../utils'
 
 @Injectable()
 export class UserService {
@@ -25,7 +26,7 @@ export class UserService {
       });
       // return user
     } else {
-      throw new HttpException(`用户名 ${body.username} 已经存在，请选择其他用户名`, HttpStatus.OK)
+      throw new HttpException(`用户名 ${body.username} 已经存在，请填写其他用户名`, HttpStatus.OK)
     }
   }
 
@@ -58,17 +59,24 @@ export class UserService {
     return successList<User>(users, { pageNum, pageSize, count });
   }
 
+
   /**
    * 更新用户信息。
    * @param body - 包含需要更新的用户信息的对象。
    * @returns 返回更新后的用户信息。
    */
-  update(body: IUpdateUser) {
-    // 使用Prisma客户端更新用户信息
-    return this.prisma.user.update({
-      where: { id: body.id }, // 根据ID定位到需要更新的用户
-      data: body, // 提供更新后的用户数据
-    });
+  async update(body: IUpdateUser) {
+    const user = await this.findByUsername(body.username);
+    if (!user) {
+      // 使用Prisma客户端更新用户信息
+      return this.prisma.user.update({
+        where: { id: body.id }, // 根据ID定位到需要更新的用户
+        data: body, // 提供更新后的用户数据
+      });
+    } else {
+      throw new HttpException(`用户名 ${body.username} 已经存在，请填写其他用户名`, HttpStatus.OK)
+    }
+
   }
 
   /**
@@ -159,8 +167,8 @@ export class UserService {
       where: {
         id: {
           in: roleIds,
-        },
-      },
+        }
+      }
     });
     // 将查询到的角色名以逗号连接成字符串
     const rolesNameList = rolesList.map((item) => item.roleName).join(',');

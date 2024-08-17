@@ -1,3 +1,5 @@
+import { formatDao } from './index';
+
 interface IList {
   createTime: Date;
   updateTime: Date;
@@ -11,18 +13,12 @@ interface IList {
  */
 export const successList = <T extends IList>(data: T[], pagination: Record<string, number>) => {
   const { pageNum, pageSize, count } = pagination;
-
-  // 将数据数组中的createTime和updateTime从Date类型转换为字符串
-  // const formatTimeList = data.map((item) => ({
-  //   ...item,
-  //   createTime: isoToYYYYMMDDHHmmss(item.createTime),
-  //   updateTime: isoToYYYYMMDDHHmmss(item.updateTime),
-  // }));
+  const formatTimeList = formatDao(data)
 
   // 返回处理后的分页结果对象
   return {
-    // records: formatTimeList,
-    records: data,
+    records: formatTimeList,
+    // records: data,
     pageNum,
     pageSize,
     total: count,

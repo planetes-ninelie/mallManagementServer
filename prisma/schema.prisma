@@ -93,7 +93,7 @@ model Attr {
   id            Int    @id @default(autoincrement())
   attrName      String
   categoryId    Int
-  categoryLevel Int    @default(3) //级别默认设置3，因为只有3级分类才能查出属性
+  categoryLevel Int    @default(3) // 级别默认设置3，因为只有3级分类才能查出属性
 
   createTime DateTime @default(now()) @map("createTime")
   updateTime DateTime @updatedAt @map("updateTime")
