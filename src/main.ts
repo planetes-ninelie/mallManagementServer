@@ -7,6 +7,8 @@ import { AllExceptionsFilter } from './exception/all-exceptions.filter';
 import { HttpExceptionFilter } from './exception/http-exception.filter';
 import { PrismaExceptionFilter } from './exception/prisma-exception-filter';
 import { TransformInterceptor } from './interceptor/transform.interceptor';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -24,6 +26,20 @@ async function bootstrap() {
   app.useGlobalFilters(new AllExceptionsFilter(), new HttpExceptionFilter(), new PrismaExceptionFilter());
   // 设置静态资源目录 //http://localhost:3000/uploads/avatar.jpg
   app.useStaticAssets(join(__dirname, '/../upload'), { prefix: '/upload' });
+
+  //创建swagger
+  const swaggerOptions = new DocumentBuilder()
+    .setTitle('悦购商城管理平台api文档')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+  const document = SwaggerModule.createDocument(app, swaggerOptions);
+  SwaggerModule.setup('doc', app, document, {
+    swaggerOptions: {
+      persistAuthorization: true, // 保持授权状态
+    },
+  });
+
   await app.listen(2306);
 }
 bootstrap();
