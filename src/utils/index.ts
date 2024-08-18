@@ -14,11 +14,14 @@ export function formatDateTime(dateTime: Date): string {
 /**
  * 对含有时间的数组对象进行处理
  */
-export function formatDao(obj:any[]):object {
+export function formatDao<T extends {
+  updateTime?: Date;
+  createTime?: Date;
+}>(obj:T[]):object {
   return obj.map((item) => ({
     ...item,
-    createTime: formatDateTime(obj?.createTime),
-    updateTime: formatDateTime(obj?.updateTime),
+    createTime: formatDateTime(item.createTime),
+    updateTime: formatDateTime(item.updateTime),
   }));
 }
 
@@ -106,21 +109,30 @@ export function isEmpty(obj: object): boolean {
  * @param parentId 当前遍历层级的父菜单项的id。
  * @returns 返回一个树结构的菜单列表，每个菜单项包括其子菜单项（如果有的话）。
  */
-export function generateMenuToTree<T extends { id: number; pid: number }>(menus: T[], parentId: number) {
-  // 过滤出当前父菜单ID的所有子菜单项
-  return menus
-    .filter((menu) => menu.pid === parentId)
-    .map((menu) => {
-      // 递归调用，为当前菜单项生成子菜单项
-      const children = generateMenuToTree(menus, menu.id);
-      const formatMenu = {
-        ...menu ,
-        createTime: formatDateTime(menu?.createTime),
-        updateTime: formatDateTime(menu?.updateTime)
-      }
-      // 返回包含子菜单项的菜单项对象
-      return { ...formatMenu, children}
-    });
+export function generateMenuToTree<T extends {
+    updateTime?: Date;
+    createTime?: Date;
+    id: number;
+    pid: number
+}>(menus: T[], parentId: number) {
+  if (!menus.length) {
+    return [];
+  } else {
+    // 过滤出当前父菜单ID的所有子菜单项
+    return menus
+      .filter((menu) => menu.pid === parentId)
+      .map((menu) => {
+        // 递归调用，为当前菜单项生成子菜单项
+        const children = generateMenuToTree(menus, menu.id);
+        const formatMenu = {
+          ...menu ,
+          createTime: formatDateTime(menu.createTime),
+          updateTime: formatDateTime(menu.updateTime)
+        }
+        // 返回包含子菜单项的菜单项对象
+        return { ...formatMenu, children}
+      });
+  }
 }
 
 // 将普通的数组转换为树形结构

@@ -23,11 +23,6 @@ export const successList = <T extends IList>(data: T[], pagination: Record<strin
     pageSize,
     total: count,
     pages: Math.ceil(count / pageSize), // 计算总页数
-    orders: [],
-    optimizeCountSql: true,
-    hitCount: false,
-    countId: null,
-    maxLimit: null,
-    searchCount: true,
+    orders: []
   };
 };

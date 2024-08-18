@@ -17,12 +17,11 @@ datasource db {
 model User {
   id         Int      @id @default(autoincrement())
   // 用户昵称
-  name       String
+  name       String   @unique
   // 用户姓名
   username   String
   password   String
   phone      String?
-  roleName   String?
   createTime DateTime @default(now()) @map("createTime")
   updateTime DateTime @updatedAt @map("updateTime")
 

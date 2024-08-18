@@ -29,6 +29,7 @@
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/platform-fastify": "^10.3.8",
     "@nestjs/serve-static": "^4.0.2",
+    "@nestjs/swagger": "^7.4.0",
     "@prisma/client": "^5.13.0",
     "cache-manager": "^5.5.1",
     "cache-manager-redis-yet": "^5.0.0",

@@ -4,7 +4,11 @@ import { extractToken } from 'src/utils';
 import { AuthService } from './auth.service';
 import { ILoginUser } from './interface';
 import { Public } from './public.decorator';
+import { ApiBearerAuth, ApiBody, ApiHeaders, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { LoginUserDto } from './class';
 
+@ApiBearerAuth()
+@ApiTags('鉴权')
 @Controller('index')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -12,6 +16,8 @@ export class AuthController {
   @Public()
   @Post('login')
   @UseInterceptors(AnyFilesInterceptor())
+  @ApiOperation({summary:'登录'})
+  @ApiBody({ type: LoginUserDto })
   // 验证码要用 @UploadedFiles() files: Array<Express.Multer.File>
   async login(@Body() body: ILoginUser) {
     return await this.authService.login(body.username, body.password);
@@ -19,6 +25,7 @@ export class AuthController {
 
   @Public()
   @Post('logout')
+  @ApiHeaders([{ name: 'Token', description: 'JWT Token' }])
   async logout(@Headers('Token') auth: string) {
     const token = extractToken(auth);
     return await this.authService.logout(token);

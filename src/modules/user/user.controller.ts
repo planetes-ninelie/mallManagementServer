@@ -1,7 +1,10 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { ICreateUser, IQueryUser, IUpdateUser } from './interface';
 import { UserService } from './user.service';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiBearerAuth()
+@ApiTags('用户管理')
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) { }
