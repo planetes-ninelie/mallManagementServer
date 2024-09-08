@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class LoginUserDto {
+export class loginDto {
   @ApiProperty({
     type: String,
     description: '用户昵称',
@@ -14,3 +14,5 @@ export class LoginUserDto {
   })
   password: string;
 }
+
+export interface ILoginDto extends loginDto{}

@@ -18,11 +18,9 @@ export const successList = <T extends IList>(data: T[], pagination: Record<strin
   // 返回处理后的分页结果对象
   return {
     records: formatTimeList,
-    // records: data,
     pageNum,
     pageSize,
     total: count,
     pages: Math.ceil(count / pageSize), // 计算总页数
-    orders: []
   };
 };

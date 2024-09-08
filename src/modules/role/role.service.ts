@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { successList } from 'src/utils/response';
 import { PrismaService } from '../prisma/prisma.service';
-import { ICreateRole, IUpdateRole } from './interface';
+import { ICreateRoleDto, IUpdateRoleDto } from './role.dto';
 
 @Injectable()
 export class RoleService {
@@ -13,8 +13,7 @@ export class RoleService {
    * @param body 包含角色信息的对象，除了id以外的所有字段。
    * @returns 返回创建的角色信息。
    */
-  create(body: ICreateRole) {
-    delete body.id; // 删除请求体中的id字段，因为id由数据库自动生成。
+  create(body: ICreateRoleDto) {
     return this.prisma.role.create({
       data: body,
     });
@@ -54,7 +53,7 @@ export class RoleService {
    * @param body 包含要更新的角色信息的对象，必须包含id字段以标识要更新的角色。
    * @returns 返回更新后的角色信息。
    */
-  update(body: IUpdateRole) {
+  update(body: IUpdateRoleDto) {
     return this.prisma.role.update({
       where: { id: body.id },
       data: body,
