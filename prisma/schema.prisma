@@ -5,7 +5,8 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["relationJoins"]
 }
 
 datasource db {
@@ -25,17 +26,19 @@ model User {
   createTime DateTime @default(now()) @map("createTime")
   updateTime DateTime @updatedAt @map("updateTime")
 
+  roles UserRole[]
+
   @@map("user")
 }
 
 // 角色表
 model Role {
-  id         Int        @id @default(autoincrement())
-  roleName   String     @unique
-  remark     String?
-  createTime DateTime   @default(now()) @map("createTime")
-  updateTime DateTime   @updatedAt @map("updateTime")
-  RoleMenu   RoleMenu[]
+  id         Int      @id @default(autoincrement())
+  roleName   String   @unique
+  createTime DateTime @default(now()) @map("createTime")
+  updateTime DateTime @updatedAt @map("updateTime")
+
+  users UserRole[]
 
   @@map("role")
 }
@@ -54,10 +57,10 @@ model Menu {
   code   String
   toCode String?
 
-  createTime DateTime   @default(now()) @map("createTime")
-  updateTime DateTime   @updatedAt @map("updateTime")
-  RoleMenu   RoleMenu[]
+  createTime DateTime @default(now()) @map("createTime")
+  updateTime DateTime @updatedAt @map("updateTime")
 
+  // RoleMenu   RoleMenu[]
   @@map("menu")
 }
 
@@ -252,12 +255,16 @@ model BaseSaleAttr {
   @@map("base_sale_attr")
 }
 
-model RoleMenu {
-  id     Int  @id @default(autoincrement())
-  roleId Int
-  menuId Int
-  role   Role @relation(fields: [roleId], references: [id])
-  menu   Menu @relation(fields: [menuId], references: [id])
+// 关系表
 
-  @@map("role_menu")
+// 用户_角色关系表
+model UserRole {
+  userId     Int      @map("user_id") // 使用 `@map` 映射到 `user_id` 列
+  roleId     Int      @map("role_id") // 使用 `@map` 映射到 `role_id` 列
+  user       User     @relation(fields: [userId], references: [id]) // 定义与 User 的关系
+  role       Role     @relation(fields: [roleId], references: [id]) // 定义与 Role 的关系
+  createTime DateTime @default(now()) @map("create_time") // 创建时间，默认为当前时间
+
+  @@id([userId, roleId]) // 复合主键，由 userId 和 roleId 组成
+  @@map("user_role") // 自定义表名
 }

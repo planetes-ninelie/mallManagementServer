@@ -25,7 +25,6 @@ export function formatDao<T extends {
   }));
 }
 
-
 /**
  * 计算字符串的MD5哈希值
  * @param content 需要计算哈希值的字符串
