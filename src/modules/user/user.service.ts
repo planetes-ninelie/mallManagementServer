@@ -144,41 +144,6 @@ export class UserService {
     });
   }
 
-  /**
-   * 根据用户ID查询用户信息，并准备角色分配相关数据
-   * @param id 用户的唯一标识符
-   * @returns 返回一个对象，包含已分配的角色列表和所有角色列表
-   */
-  // async toAssign(id: number) {
-  //   // 通过ID查询唯一的用户信息
-  //   const user = await this.prisma.user.findUnique({ where: { id } });
-  //
-  //   // 初始化已分配的角色列表
-  //   let assignRoles = [];
-  //
-  //   // 将用户角色名以逗号分隔，存为列表
-  //   const userRoleNameList = user.roleName?.split(',');
-  //
-  //   // 如果用户有角色名，则查询与之匹配的所有角色信息
-  //   if (userRoleNameList && userRoleNameList.length > 0) {
-  //     assignRoles = await this.prisma.role.findMany({
-  //       where: {
-  //         roleName: {
-  //           in: userRoleNameList,
-  //         },
-  //       },
-  //     });
-  //   }
-  //
-  //   // 查询所有角色信息
-  //   const allRolesList = await this.prisma.role.findMany();
-  //
-  //   // 返回数据
-  //   return {
-  //     assignRoles,
-  //     allRolesList,
-  //   };
-  // }
 
   /**
    * 为用户分配角色。
@@ -188,25 +153,6 @@ export class UserService {
    * @returns 返回null。
    */
   async doAssignRole(id: number, roleIds: number[]) {
-    // 获取用户信息
-    // const user = await this.prisma.user.findUnique({
-    //   where: {
-    //     id,
-    //   }
-    // });
-    // // 将查询到的角色名以逗号连接成字符串
-    // const rolesNameList = rolesList.map((item) => item.roleName).join(',');
-    //
-    // // 更新用户的角色名字段
-    // await this.prisma.user.update({
-    //   where: {
-    //     id,
-    //   },
-    //   data: {
-    //     roleName: rolesNameList,
-    //   },
-    // });
-
     const user = await this.prisma.user.findUnique({
       where: {
         id,
@@ -259,6 +205,21 @@ export class UserService {
         })
       }
     }
+    const data = await this.prisma.user.findUnique({
+      where:{
+        id:id
+      },
+      select:{
+        name:true,
+        username:true,
+        password:true,
+        phone:true
+      }
+    })
+    await this.prisma.user.update({
+      where: { id: id }, // 根据ID定位到需要更新的用户
+      data: data, // 提供更新后的用户数据
+    });
     console.log(userRole)
     return null;
   }
