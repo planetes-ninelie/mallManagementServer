@@ -1,9 +1,9 @@
-import { PagesVo } from '../../common/vo/pagesVo';
+// import { PagesVo } from '../../common/vo/pagesVo';
 import { User } from './user.entity';
-import { Role } from '../role/role.entity';
+// import { Role } from '../role/role.entity';
 
 export class UserVo extends User{
   roleName: string;
-  roles?: Role[]
+  // roles?: Role[];
 }
-export class UserListPagesVo extends PagesVo<UserVo>{}
+// export class UserListPagesVo extends PagesVo<UserVo>{}
