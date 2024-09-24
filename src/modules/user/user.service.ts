@@ -1,11 +1,12 @@
 // noinspection BadExpressionStatementJS
 
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { User } from '@prisma/client';
+// import { User } from '@prisma/client';
 import { successList } from 'src/utils/response';
 import { PrismaService } from '../prisma/prisma.service';
 import { ICreateUserDto, IUpdateUserDto } from './user.dto';
 import { md5 } from '../../utils';
+// import { UserVo } from './user.vo';
 
 @Injectable()
 export class UserService {
@@ -74,19 +75,19 @@ export class UserService {
         }),
       };
     });
-    const userVo = userRole.map((user ) => {
-      (user.roles as any) = user.roles.map(item => {
-        if (item) return item.role.roleName;
-      }).join(',');
-      user.roleName = user.roles
-      delete user.roles
-      delete user.password
-      return user;
-    });
-    // 返回分页信息和查询结果
-    return successList<User>(userVo, { pageNum, pageSize, count });
-  }
+    const userVo = userRole.map(user => ({
+      id: user.id,
+      name: user.username,
+      phone: user.phone,
+      createTime: user.createTime,
+      updateTime: user.updateTime,
+      username: user.username,
+      roleName: user.roles.map(item => item.role.roleName).join(' ')
+    }));
 
+    // 返回分页信息和查询结果
+    return successList(userVo, { pageNum, pageSize, count });
+  }
 
   /**
    * 更新用户信息。
