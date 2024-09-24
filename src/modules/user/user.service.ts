@@ -207,7 +207,6 @@ export class UserService {
     //   },
     // });
 
-
     const user = await this.prisma.user.findUnique({
       where: {
         id,
@@ -243,6 +242,24 @@ export class UserService {
         });
       }
     }
+    const userRole = await  this.prisma.userRole.findMany({
+      where: {
+        userId: id,
+      }
+    })
+    for (const item of userRole) {
+      if(!roleIds.includes( item.roleId )) {
+        await  this.prisma.userRole.delete({
+          where: {
+            userId_roleId: {
+              userId: id,
+              roleId: item.roleId
+            }
+          }
+        })
+      }
+    }
+    console.log(userRole)
     return null;
   }
 }
