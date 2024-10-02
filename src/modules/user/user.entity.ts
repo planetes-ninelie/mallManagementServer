@@ -1,4 +1,4 @@
-import { Role } from '../role/role.entity';
+// import { Role } from '../role/role.entity';
 
 export class User {
   id: number;
@@ -10,6 +10,6 @@ export class User {
   password?: string;
 }
 
-export class UserRoleEntity extends User{
-  roles: Role[]
-}
+// export class UserRoleEntity extends User{
+//   roles: Role[]
+// }

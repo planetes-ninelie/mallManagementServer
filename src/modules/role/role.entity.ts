@@ -1,6 +1,7 @@
 export class RoleEntity {
   id: number;
   roleName: string;
+  description: string;
   createTime: string;
   updateTime: string;
 }

@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Menu, RoleMenu } from '@prisma/client';
 import { generateMenuToTree } from 'src/utils';
 import { PrismaService } from '../prisma/prisma.service';
-import { ICreateAndUpdateMenu } from './interface';
+import { CreateMenuDto, UpdateMenuDto } from './menu.dto';
 
 @Injectable()
 export class MenuService {
@@ -21,17 +21,35 @@ export class MenuService {
    * @param body 包含菜单项信息的对象
    * @returns 创建的菜单项
    */
-  create(body: ICreateAndUpdateMenu) {
+  async create(body: CreateMenuDto) {
     const { code, level, name, pid, type } = body;
-    return this.prisma.menu.create({
-      data: {
-        code,
-        level,
-        name,
-        pid,
-        type,
-      },
-    });
+    if(!name) {
+      throw new HttpException('菜单名称不能为空，请填写菜单名称',HttpStatus.OK);
+    }
+    const menu = await this.findByName(name)
+    if (!menu) {
+      return this.prisma.menu.create({
+        data: {
+          code,
+          level,
+          name,
+          pid,
+          type,
+        },
+      });
+    } else {
+      throw new HttpException(`菜单名称 ${name} 已存在，请重新填写菜单名称`, HttpStatus.OK);
+    }
+  }
+
+  /**
+   * 根据菜单名称查菜单详情
+   * @param name 菜单名称
+   */
+  findByName(name: string) {
+    return this.prisma.menu.findFirst({
+      where:{name}
+    })
   }
 
   /**
@@ -39,20 +57,28 @@ export class MenuService {
    * @param body 包含菜单项信息和ID的对象
    * @returns 更新后的菜单项
    */
-  update(body: ICreateAndUpdateMenu) {
+  async update(body: UpdateMenuDto) {
     const { id, code, level, name, pid, type } = body;
-    return this.prisma.menu.update({
-      where: {
-        id,
-      },
-      data: {
-        code,
-        level,
-        name,
-        pid,
-        type,
-      },
-    });
+    if(!name) {
+      throw new HttpException('菜单名称不能为空，请填写菜单名称',HttpStatus.OK);
+    }
+    const menu = await this.findByName(name)
+    if(!menu) {
+      return this.prisma.menu.update({
+        where: {
+          id,
+        },
+        data: {
+          code,
+          level,
+          name,
+          pid,
+          type,
+        },
+      });
+    } else {
+      throw new HttpException(`菜单名称 ${name} 已存在，请重新填写菜单名称`,HttpStatus.OK);
+    }
   }
 
   /**
@@ -60,13 +86,50 @@ export class MenuService {
    * @param id 要删除的菜单项的ID
    * @returns 删除操作的结果
    */
-  remove(id: number) {
-    return this.prisma.menu.delete({
+  async remove(id: number) {
+    const ids = await this.findChildren(id,[id])
+    await this.prisma.roleMenu.deleteMany({
+      where : {
+        menuId: {
+          in: ids
+        }
+      }
+    })
+    return this.prisma.menu.deleteMany({
       where: {
-        id,
-      },
-    });
+        id: {
+          in: ids
+        }
+      }
+    })
   }
+
+  /**
+   * 根据pid查菜单信息
+   * @param pid 菜单父id
+   */
+  findByPid(pid: number) {
+    return this.prisma.menu.findMany({
+      where:{pid}
+    })
+  }
+
+  async findChildren(pid: number,ids:number[]) {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const that = this
+    async function findChildrenByPid(pid) {
+      const menus = await that.findByPid(pid)
+      if(menus.length > 0){
+        for (const item of menus) {
+          ids.push(item.id);
+          await findChildrenByPid(item.id)
+        }
+      }
+    }
+    await findChildrenByPid(pid)
+    return ids
+  }
+
 
   /**
    * 获取指定角色的权限
@@ -77,28 +140,49 @@ export class MenuService {
     const menuList = await this.prisma.menu.findMany();
     const roleMenuList = await this.prisma.roleMenu.findMany({
       where: {
-        roleId,
+        roleId
       },
     });
-
     return this.generateMenuToTreeToSelect<Menu>(menuList, 0, roleMenuList);
   }
 
   /**
    * 为角色分配权限
    * @param roleId 角色的ID
-   * @param permissionId 权限ID的字符串，多个ID以逗号分隔
+   * @param permissionIdList 权限ID的数组
    * @returns 创建的权限关联记录
    */
-  async doAssign(roleId: string, permissionId: string) {
-    const menuIds = permissionId.split(',');
-    const result = await this.prisma.roleMenu.createMany({
-      data: menuIds.map((menuId) => ({
-        roleId: Number(roleId),
-        menuId: Number(menuId),
-      })),
-    });
-    return result;
+  async doAssign(roleId: number, permissionIdList: number[]) {
+    const oldPermissionIdList = await this.prisma.roleMenu.findMany({
+      where: {
+        roleId
+      },
+      select: {
+        menuId: true
+      }
+    }).then(roleMenuList => roleMenuList.map(item => item.menuId ))
+    const addIdList = permissionIdList.filter(item => !oldPermissionIdList.includes(item));
+    if (addIdList) {
+      await this.prisma.roleMenu.createMany({
+        data: addIdList.map(item => {
+          return {
+            roleId,
+            menuId:item
+          }
+        })
+      })
+    }
+    const removeIdList = oldPermissionIdList.filter(item => !permissionIdList.includes(item));
+    if (removeIdList) {
+      await this.prisma.roleMenu.deleteMany({
+        where: {
+          menuId: {
+            in: removeIdList
+          },
+          roleId
+        }
+      })
+    }
   }
 
   /**

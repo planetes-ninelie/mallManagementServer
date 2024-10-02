@@ -1,8 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateRoleDto {
-  @ApiProperty({ type: Number, description: '角色名称', default: 'cv工程师', required: true })
+  @ApiProperty({ type: String, description: '角色名称', default: 'cv工程师', required: true })
   roleName: string;
+  @ApiProperty({ type: String, description: '角色描述', default: 'cv工程师1', required: true })
+  description?: string;
 }
 
 export class UpdateRoleDto extends CreateRoleDto {
