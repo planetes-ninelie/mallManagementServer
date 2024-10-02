@@ -1,13 +1,10 @@
-// noinspection BadExpressionStatementJS
-
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-// import { User } from '@prisma/client';
 import { successList } from 'src/utils/response';
 import { PrismaService } from '../prisma/prisma.service';
 import { ICreateUserDto, IUpdateUserDto } from './user.dto';
 import { md5 } from '../../utils';
-// import { UserVo } from './user.vo';
 
+// noinspection Annotator
 @Injectable()
 export class UserService {
   constructor(private readonly prisma: PrismaService) {
@@ -19,6 +16,9 @@ export class UserService {
    * @returns 返回通过Prisma ORM创建的用户实例。
    */
   async create(body: ICreateUserDto) {
+    if (!body.username) {
+      throw new HttpException(`用户昵称不能为空，请填写用户昵称`, HttpStatus.OK);
+    }
     const user = await this.findByUsername(body.username);
     if (!user) {
       // 删除createUser对象中的id属性，因为id应该是由系统自动生成的。
@@ -29,7 +29,7 @@ export class UserService {
         data: body,
       });
     } else {
-      throw new HttpException(`用户名 ${body.username} 已经存在，请填写其他用户名`, HttpStatus.OK);
+      throw new HttpException(`用户昵称 ${body.username} 已经存在，请填写其他用户名`, HttpStatus.OK);
     }
   }
 
@@ -77,14 +77,13 @@ export class UserService {
     });
     const userVo = userRole.map(user => ({
       id: user.id,
-      name: user.username,
+      name: user.name,
       phone: user.phone,
       createTime: user.createTime,
       updateTime: user.updateTime,
       username: user.username,
       roleName: user.roles.map(item => item.role.roleName).join(' ')
     }));
-
     // 返回分页信息和查询结果
     return successList(userVo, { pageNum, pageSize, count });
   }
@@ -95,14 +94,18 @@ export class UserService {
    * @returns 返回更新后的用户信息。
    */
   async update(body: IUpdateUserDto) {
-    if (body.id) {
+    if (!body.username) {
+      throw new HttpException(`用户昵称不能为空，请填写角色名称`, HttpStatus.OK);
+    }
+    const user = await this.findByUsername(body.username);
+    if (!user) {
       // 使用Prisma客户端更新用户信息
       return this.prisma.user.update({
         where: { id: body.id }, // 根据ID定位到需要更新的用户
         data: body, // 提供更新后的用户数据
       });
     } else {
-      throw new HttpException(`用户名 ${body.username} 修改失败！`, HttpStatus.OK);
+      throw new HttpException(`用户昵称 ${body.username} 已经存在，请填写其他用户名`, HttpStatus.OK);
     }
   }
 
@@ -111,7 +114,10 @@ export class UserService {
    * @param id - 需要删除的用户的ID。
    * @returns 返回删除操作的结果。
    */
-  remove(id: number) {
+   async remove(id: number) {
+    await this.prisma.userRole.deleteMany({
+      where: { userId: id },
+    })
     // 使用Prisma客户端删除指定ID的用户
     return this.prisma.user.delete({
       where: { id: id }, // 根据ID定位到需要删除的用户
@@ -123,13 +129,20 @@ export class UserService {
    * @param ids 需要删除的用户ID数组
    * @returns count 返回Prisma客户端的删除操作响应
    */
-  batchRemove(ids: number[]) {
+  async batchRemove(ids: number[]) {
+    await this.prisma.userRole.deleteMany({
+      where: {
+        userId: {
+          in: ids,
+        }
+      }
+    })
     return this.prisma.user.deleteMany({
       where: {
         id: {
           in: ids,
-        },
-      },
+        }
+      }
     });
   }
 
@@ -221,7 +234,6 @@ export class UserService {
       where: { id: id }, // 根据ID定位到需要更新的用户
       data: data, // 提供更新后的用户数据
     });
-    console.log(userRole)
     return null;
   }
 }

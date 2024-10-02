@@ -33,34 +33,35 @@ model User {
 
 // 角色表
 model Role {
-  id         Int      @id @default(autoincrement())
-  roleName   String   @unique
-  createTime DateTime @default(now()) @map("createTime")
-  updateTime DateTime @updatedAt @map("updateTime")
+  id          Int      @id @default(autoincrement())
+  roleName    String   @unique
+  description String?
+  createTime  DateTime @default(now()) @map("createTime")
+  updateTime  DateTime @updatedAt @map("updateTime")
 
   users UserRole[]
+  menus RoleMenu[]
 
   @@map("role")
 }
 
 // 菜单表
 model Menu {
-  id     Int      @id @default(autoincrement())
-  name   String
-  pid    Int
-  // 1 菜单 2 按钮
-  type   Int
-  status String?
-  level  Int
-  select Boolean?
-  // 后面两个没什么用
-  code   String
-  toCode String?
-
+  id         Int      @id @default(autoincrement())
+  name       String
+  // 菜单的父菜单id，默认为1
+  pid        Int?
+  // 菜单类型，菜单为1，按钮为2
+  type       Int?
+  // 菜单的等级
+  level      Int?
+  // 菜单权限值
+  code       String?
   createTime DateTime @default(now()) @map("createTime")
   updateTime DateTime @updatedAt @map("updateTime")
 
-  // RoleMenu   RoleMenu[]
+  roles RoleMenu[]
+
   @@map("menu")
 }
 
@@ -255,6 +256,16 @@ model BaseSaleAttr {
   @@map("base_sale_attr")
 }
 
+// 用户头像
+model Photo {
+  id          Int      @id @default(autoincrement())
+  name        String?
+  url         String
+  description String?
+  createTime  DateTime @default(now()) @map("createTime")
+  updateTime  DateTime @updatedAt @map("updateTime")
+}
+
 // 关系表
 
 // 用户_角色关系表
@@ -267,4 +278,16 @@ model UserRole {
 
   @@id([userId, roleId]) // 复合主键，由 userId 和 roleId 组成
   @@map("user_role") // 自定义表名
+}
+
+// 角色_菜单关系表
+model RoleMenu {
+  roleId     Int      @map("role_id")
+  menuId     Int      @map("menu_id")
+  role       Role     @relation(fields: [roleId], references: [id])
+  menu       Menu     @relation(fields: [menuId], references: [id])
+  createTime DateTime @default(now()) @map("create_time")
+
+  @@id([roleId, menuId])
+  @@map("role_menu")
 }

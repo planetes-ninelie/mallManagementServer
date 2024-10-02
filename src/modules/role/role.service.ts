@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { successList } from 'src/utils/response';
 import { PrismaService } from '../prisma/prisma.service';
@@ -13,10 +13,18 @@ export class RoleService {
    * @param body 包含角色信息的对象，除了id以外的所有字段。
    * @returns 返回创建的角色信息。
    */
-  create(body: ICreateRoleDto) {
-    return this.prisma.role.create({
-      data: body,
-    });
+  async create(body: ICreateRoleDto) {
+    if (!body.roleName) {
+      throw new HttpException(`角色名称不能为空，请填写角色名称`, HttpStatus.OK);
+    }
+    const role = await this.findByName(body.roleName)
+    if (!role) {
+      return this.prisma.role.create({
+        data: body
+      });
+    } else {
+      throw new HttpException(`角色名称 ${body.roleName} 已存在，请填写其他角色名称`, HttpStatus.OK);
+    }
   }
 
   /**
@@ -49,15 +57,33 @@ export class RoleService {
   }
 
   /**
+   * 根据角色名称查角色信息
+   * @param roleName 需要查找角色的角色名称
+   */
+  findByName(roleName: string) {
+    return this.prisma.role.findFirst({
+      where: { roleName }
+    })
+  }
+
+  /**
    * 更新一个存在的角色信息。
    * @param body 包含要更新的角色信息的对象，必须包含id字段以标识要更新的角色。
    * @returns 返回更新后的角色信息。
    */
-  update(body: IUpdateRoleDto) {
-    return this.prisma.role.update({
-      where: { id: body.id },
-      data: body,
-    });
+  async update(body: IUpdateRoleDto) {
+    if (!body.roleName) {
+      throw new HttpException(`角色名称不能为空，请填写角色名称`, HttpStatus.OK);
+    }
+    const role = await this.findByName(body.roleName)
+    if (!role) {
+      return this.prisma.role.update({
+        where: { id: body.id },
+        data: body,
+      });
+    } else {
+      throw new HttpException(`角色名称 ${body.roleName} 已存在，请填写其他角色名称`, HttpStatus.OK);
+    }
   }
 
   /**
@@ -65,7 +91,13 @@ export class RoleService {
    * @param id 要删除的角色的ID。
    * @returns 返回删除操作的结果。
    */
-  remove(id: number) {
+  async remove(id: number) {
+    await this.prisma.userRole.deleteMany({
+      where: { roleId: id },
+    })
+    await this.prisma.roleMenu.deleteMany({
+      where: { roleId: id },
+    })
     return this.prisma.role.delete({
       where: { id: id },
     });
@@ -76,7 +108,21 @@ export class RoleService {
    * @param ids 要删除的角色的ID数组。
    * @returns 返回批量删除操作的结果。
    */
-  batchRemove(ids: number[]) {
+  async batchRemove(ids: number[]) {
+    await this.prisma.userRole.deleteMany({
+      where: {
+        roleId: {
+          in: ids, // 删除ID在指定数组中的所有角色。
+        },
+      },
+    });
+    await this.prisma.roleMenu.deleteMany({
+      where: {
+        roleId: {
+          in: ids, // 删除ID在指定数组中的所有角色。
+        },
+      },
+    });
     return this.prisma.role.deleteMany({
       where: {
         id: {

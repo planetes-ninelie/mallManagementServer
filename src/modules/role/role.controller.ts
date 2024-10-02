@@ -22,6 +22,9 @@ export class RoleController {
   @ApiBody({ type:CreateRoleDto })
   @Post('save')
   create(@Body() body: ICreateRoleDto) {
+    if(body.description === undefined) {
+      body.description = ''
+    }
     return this.roleService.create(body);
   }
 
