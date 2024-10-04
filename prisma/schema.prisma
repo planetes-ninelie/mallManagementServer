@@ -73,7 +73,9 @@ model Image {
   // 1为用户头像  2为品牌头像  3为Spu图标
   type       Int?
   // 对应类型表的id
-  tid        Int
+  tid        Int?
+  // 文件的hash值
+  hash       String
   createTime DateTime @default(now()) @map("createTime")
   updateTime DateTime @updatedAt @map("updateTime")
 

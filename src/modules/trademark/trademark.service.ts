@@ -15,10 +15,10 @@ export class TrademarkService {
    *
    * @returns 返回一个Promise，该Promise解析为品牌记录的数组。
    */
-  getTrademarkList() {
-    // 使用Prisma客户端查询所有品牌记录
-    return this.prisma.trademark.findMany();
-  }
+  // getTrademarkList() {
+  //   // 使用Prisma客户端查询所有品牌记录
+  //   return this.prisma.trademark.findMany();
+  // }
   /**
    * 找到所有品牌，并根据页码和页面大小进行分页。
    * @param pageNum 当前页码
