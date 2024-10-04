@@ -6,7 +6,7 @@ import { UploadEntity } from './upload.entity';
 import * as crypto from 'crypto';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import * as fs from 'fs';
-// import * as mime from 'mime-types';
+import * as mime from 'mime-types';
 
 @Injectable({ scope: Scope.REQUEST })
 export class UploadService {
@@ -16,10 +16,10 @@ export class UploadService {
     const fileName = Date.now() + extname(file.originalname);
     try {
       // 检查文件类型是否为图片
-      // const isImage = this.isImage(file);
-      // if (!isImage) {
-      //   throw new Error('上传的文件不是图片');
-      // }
+      const isImage = this.isImage(file);
+      if (!isImage) {
+        throw new Error('上传的文件不是 jpe?g|png|gif|bmp|webp 类型');
+      }
       if(!fileName) {
         throw new Error("没有文件名")
       }
@@ -68,22 +68,21 @@ export class UploadService {
       }
 
       // 删除文件系统中的文件
-      const filePath = fileRecord.url.split('/').pop();
-      if (filePath) {
-        fs.unlink(`./${filePath}`, (err) => {
+      const filePath = fileRecord.url.split('/').slice(-2).join('/');
+      console.log(filePath);
+      fs.unlink(`./${filePath}`, async (err) => {
           if (err) {
             console.error('删除文件时发生错误:', err);
             throw new Error('删除文件失败');
+          } else {
+            // 从数据库中删除记录
+            await this.prisma.image.delete({
+              where: { id },
+            });
+            return true;
           }
         });
-      }
 
-      // 从数据库中删除记录
-      await this.prisma.image.delete({
-        where: { id },
-      });
-
-      return true;
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         throw new HttpException('删除失败', HttpStatus.INTERNAL_SERVER_ERROR);
@@ -105,7 +104,7 @@ export class UploadService {
       return false;
     }
     // 检查MIME类型是否为图片类型
-    const mimeType = mime.getType(file.originalname);
+    const mimeType = mime.lookup(file.originalname);
     return mimeType.startsWith('image/');
   }
 }
