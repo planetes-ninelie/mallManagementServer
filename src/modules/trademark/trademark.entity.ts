@@ -1,7 +1,9 @@
 
 export class TrademarkEntity {
-  id: number;
+  id?: number;
   tmName: string;
   createTime?: string;
   updateTime?: string;
 }
+
+export interface ITrademarkEntity extends TrademarkEntity {}
