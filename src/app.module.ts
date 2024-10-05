@@ -8,6 +8,7 @@ import { RoleModule } from './modules/role/role.module';
 import { TrademarkModule } from './modules/trademark/trademark.module';
 import { UploadModule } from './modules/upload/upload.module';
 import { UserModule } from './modules/user/user.module';
+import { FileModule } from './modules/file/file.module';
 
 @Module({
   imports: [
@@ -24,7 +25,7 @@ import { UserModule } from './modules/user/user.module';
           },
           {
             path: 'product',
-            children: [ProductModule, TrademarkModule, UploadModule],
+            children: [ProductModule, TrademarkModule, UploadModule,FileModule],
           },
         ],
       },
@@ -34,6 +35,7 @@ import { UserModule } from './modules/user/user.module';
     TrademarkModule,
     UploadModule,
     ProductModule,
+    FileModule
   ],
   controllers: [],
   providers: [],

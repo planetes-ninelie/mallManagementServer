@@ -67,19 +67,15 @@ model Menu {
 
 // 图片表
 model Image {
-  id         Int      @id @default(autoincrement())
-  name       String
+  id         Int         @id @default(autoincrement())
   url        String
-  // 1为用户头像  2为品牌头像  3为Spu图标
-  type       Int?
-  // 对应类型表的id
-  tid        Int?
   // 文件的hash值
   hash       String
-  createTime DateTime @default(now()) @map("createTime")
-  updateTime DateTime @updatedAt @map("updateTime")
-
-  skus SkuImage[]
+  createTime DateTime    @default(now()) @map("createTime")
+  updateTime DateTime    @updatedAt @map("updateTime")
+  // 引用次数，在管理表时，为0时删除该数据
+  num        Int         @default(0)
+  trademark  Trademark[]
 
   @@map("image")
 }
@@ -90,8 +86,9 @@ model Trademark {
   tmName     String
   createTime DateTime @default(now()) @map("createTime")
   updateTime DateTime @updatedAt @map("updateTime")
-
-  spus Spu[]
+  imageId    Int?
+  image      Image?   @relation(fields: [imageId], references: [id])
+  spus       Spu[]
 
   @@map("trademark")
 }
@@ -173,7 +170,6 @@ model Sku {
   updateTime DateTime @updatedAt @map("updateTime")
 
   spus       SpuSku[]
-  images     SkuImage[]
   attrValues SkuAttrValue[]
 
   @@map("sku")
@@ -241,18 +237,6 @@ model SpuSku {
   @@map("spu_sku")
 }
 
-// sku_图片关系表
-model SkuImage {
-  image      Image    @relation(fields: [imageId], references: [id])
-  imageId    Int      @map("image_id")
-  sku        Sku      @relation(fields: [skuId], references: [id])
-  skuId      Int      @map("sku_id")
-  createTime DateTime @default(now()) @map("create_time")
-
-  @@id([imageId, skuId])
-  @@map("sku_image")
-}
-
 // sku_属性值
 model SkuAttrValue {
   attrValue   AttrValue @relation(fields: [attrValueId], references: [id])
@@ -263,4 +247,16 @@ model SkuAttrValue {
 
   @@id([attrValueId, skuId])
   @@map("sku_attr_value")
+}
+
+model ImageRelation {
+  id         Int      @id @default(autoincrement())
+  // 1为用户头像  2为品牌头像  3为Spu图标 4为sku图标
+  type       Int?
+  // 对应类型表的id
+  tid        Int?
+  imageId    Int?     @map("image_id")
+  createTime DateTime @default(now()) @map("create_time")
+
+  @@map("image_relation")
 }

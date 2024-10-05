@@ -1,12 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { Trademark } from '@prisma/client';
 import { successList } from 'src/utils/response';
 import { PrismaService } from '../prisma/prisma.service';
 import { TrademarkDto } from './dto';
+import { FileService } from '../file/file.service';
+import { IUpdateTidDto } from '../file/file.dto';
+import { ITrademarkEntity } from './trademark.entity';
+import { ITrademarkVo } from './trademark.vo';
 
 @Injectable()
 export class TrademarkService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService,private readonly fileService: FileService) {}
 
   /**
    * 获取品牌列表。
@@ -35,13 +38,24 @@ export class TrademarkService {
           orderBy: {
             createTime: 'desc',
           },
+          include: {
+            image: {
+              select: {
+                url:true
+              }
+            }
+          }
         }),
-        count: await prisma.trademark.count(), // 获取品牌总数
+        // 获取品牌总数
+        count: await prisma.trademark.count(),
       };
     });
-
+    const trademarksList: ITrademarkVo[] = trademarks.map(item => {
+      item.logoUrl = item.image.url;
+      return item
+    });
     // 返回分页信息和查询结果
-    return successList<Trademark>(trademarks, { pageNum, pageSize, count });
+    return successList<ITrademarkVo>(trademarksList, { pageNum, pageSize, count });
   }
 
   /**
@@ -49,11 +63,35 @@ export class TrademarkService {
    * @param body 包含品牌信息的对象
    * @returns 返回创建的品牌对象
    */
-  create(body: TrademarkDto) {
-    delete body.id; // 删除id属性，因为这将由Prisma客户端自动生成
-    return this.prisma.trademark.create({
-      data: body,
+  async create(body: ITrademarkEntity) {
+    const tmName:string = body.tmName
+    const image = await this.prisma.image.findFirst({
+      where: {
+        url: body.logoUrl
+      }
+    })
+    const num = image.num + 1
+    await this.prisma.image.update({
+      where: {
+        id: image.id,
+      },
+      data:{
+        num
+      }
+    })
+    const result = await this.prisma.trademark.create({
+      data: {
+        tmName,
+        imageId:image.id
+      },
     });
+    const imageRelation:IUpdateTidDto = {
+      type: 2,
+      tid: result.id,
+      logoUrl: body.logoUrl
+    }
+    await this.fileService.addImageRelation(imageRelation)
+    return result
   }
 
   /**

@@ -2,7 +2,6 @@ import { HttpException, HttpStatus, Inject, Injectable, Scope } from '@nestjs/co
 import { REQUEST } from '@nestjs/core';
 import { extname } from 'path';
 import { PrismaService } from '../prisma/prisma.service';
-import { UploadEntity } from './upload.entity';
 import * as crypto from 'crypto';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import * as fs from 'fs';
@@ -12,7 +11,7 @@ import * as mime from 'mime-types';
 export class UploadService {
   constructor(@Inject(REQUEST) private request: Request,private readonly prisma: PrismaService) {}
 
-  async uploadFile(file: Express.Multer.File,type): Promise<UploadEntity> {
+  async uploadFile(file,type): Promise<string> {
     const fileName = Date.now() + extname(file.originalname);
     try {
       // 检查文件类型是否为图片
@@ -31,7 +30,7 @@ export class UploadService {
       });
       if (existingFile) {
         // 文件已存在，直接返回
-        return existingFile;
+        return existingFile.url;
       }
       // 文件不存在，创建写入流并将文件保存到磁盘
       const fileStream = fs.createWriteStream(uploadPath);
@@ -39,14 +38,14 @@ export class UploadService {
       fileStream.end();
       // 创建数据库记录
       const data = {
-        name: fileName,
+        num: 0,
         url: `${this.getHostAndPort()}/${uploadPath}`,
-        type,
         hash, // 将哈希值保存到数据库
       };
-      return this.prisma.image.create({
+      await this.prisma.image.create({
         data,
       });
+      return data.url
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         throw new HttpException('上传失败', HttpStatus.INTERNAL_SERVER_ERROR);
@@ -82,7 +81,6 @@ export class UploadService {
             return true;
           }
         });
-
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         throw new HttpException('删除失败', HttpStatus.INTERNAL_SERVER_ERROR);
@@ -92,7 +90,7 @@ export class UploadService {
     }
   }
 
-  getHostAndPort(): string {
+  private getHostAndPort(): string {
     const host = this.request?.headers['host'];
     return `http://${host}`;
   }

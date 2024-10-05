@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
-import { TrademarkDto } from './dto';
+import { TrademarkDto,ITrademarkDto } from './trademark.dto';
 import { TrademarkService } from './trademark.service';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 
 @ApiBearerAuth()
 @ApiTags('品牌管理')
@@ -18,8 +18,9 @@ export class TrademarkController {
   }
 
   @ApiOperation({summary:'创建新的品牌'})
+  @ApiBody({type: TrademarkDto})
   @Post('save')
-  create(@Body() body: TrademarkDto) {
+  create(@Body() body: ITrademarkDto) {
     return this.trademarkService.create(body);
   }
 
