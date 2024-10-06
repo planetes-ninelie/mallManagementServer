@@ -9,6 +9,7 @@ import { TrademarkModule } from './modules/trademark/trademark.module';
 import { UploadModule } from './modules/upload/upload.module';
 import { UserModule } from './modules/user/user.module';
 import { FileModule } from './modules/file/file.module';
+import { CategoryModule } from './modules/category/category.module';
 
 @Module({
   imports: [
@@ -25,7 +26,7 @@ import { FileModule } from './modules/file/file.module';
           },
           {
             path: 'product',
-            children: [ProductModule, TrademarkModule, UploadModule,FileModule],
+            children: [ProductModule, TrademarkModule,CategoryModule,UploadModule,FileModule],
           },
         ],
       },
@@ -33,6 +34,7 @@ import { FileModule } from './modules/file/file.module';
     RoleModule,
     MenuModule,
     TrademarkModule,
+    CategoryModule,
     UploadModule,
     ProductModule,
     FileModule

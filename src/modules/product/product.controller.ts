@@ -1,36 +1,11 @@
 import { Body, Controller, Delete, Get, Param, Post, Query } from '@nestjs/common';
-import { CategoryLevel } from './enum';
-import { ICreateCategory, ICreateOrUpdateAttr, SkuInfo, SpuInfo } from './interface';
+import { ICreateOrUpdateAttr, SkuInfo, SpuInfo } from './interface';
 import { ProductService } from './product.service';
 
 @Controller('')
 export class ProductController {
   constructor(private readonly productService: ProductService) { }
 
-  /* 分类相关接口 */
-  // 获取一级分类
-  @Get('getCategory1')
-  getCategory1() {
-    return this.productService.getCategory(CategoryLevel.FIRST);
-  }
-
-  // 获取2级分类
-  @Get('getCategory2/:id')
-  getCategory2(@Param('id') id: number) {
-    return this.productService.getCategory(CategoryLevel.SECOND, id);
-  }
-
-  // 获取3级分类
-  @Get('getCategory3/:id')
-  getCategory3(@Param('id') id: number) {
-    return this.productService.getCategory(CategoryLevel.THIRD, id);
-  }
-
-  // 创建分类，用于postman测试
-  @Post('category')
-  createCategory(@Body() body: ICreateCategory) {
-    return this.productService.createCategory(body);
-  }
 
   /* 平台属性相关接口！！！！！！！！！！！！！！！！！！！ */
   // 属性列表
