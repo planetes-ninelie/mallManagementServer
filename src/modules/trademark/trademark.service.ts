@@ -1,27 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { successList } from 'src/utils/response';
 import { PrismaService } from '../prisma/prisma.service';
-import { TrademarkDto } from './dto';
 import { FileService } from '../file/file.service';
 import { IUpdateTidDto } from '../file/file.dto';
-import { ITrademarkEntity } from './trademark.entity';
 import { ITrademarkVo } from './trademark.vo';
+import { ITrademarkDto } from './trademark.dto';
 
 @Injectable()
 export class TrademarkService {
   constructor(private readonly prisma: PrismaService,private readonly fileService: FileService) {}
 
-  /**
-   * 获取品牌列表。
-   *
-   * 本函数不接受任何参数，通过调用Prisma客户端的`findMany`方法查询所有品牌记录，并返回查询结果。
-   *
-   * @returns 返回一个Promise，该Promise解析为品牌记录的数组。
-   */
-  // getTrademarkList() {
-  //   // 使用Prisma客户端查询所有品牌记录
-  //   return this.prisma.trademark.findMany();
-  // }
   /**
    * 找到所有品牌，并根据页码和页面大小进行分页。
    * @param pageNum 当前页码
@@ -52,6 +40,7 @@ export class TrademarkService {
     });
     const trademarksList: ITrademarkVo[] = trademarks.map(item => {
       item.logoUrl = item.image.url;
+      delete item.image
       return item
     });
     // 返回分页信息和查询结果
@@ -63,22 +52,9 @@ export class TrademarkService {
    * @param body 包含品牌信息的对象
    * @returns 返回创建的品牌对象
    */
-  async create(body: ITrademarkEntity) {
-    const tmName:string = body.tmName
-    const image = await this.prisma.image.findFirst({
-      where: {
-        url: body.logoUrl
-      }
-    })
-    const num = image.num + 1
-    await this.prisma.image.update({
-      where: {
-        id: image.id,
-      },
-      data:{
-        num
-      }
-    })
+  async create(body: ITrademarkDto) {
+    const tmName= body.tmName
+    const image = await this.fileService.selectImage(body.logoUrl)
     const result = await this.prisma.trademark.create({
       data: {
         tmName,
@@ -99,12 +75,38 @@ export class TrademarkService {
    * @param body 包含更新后的品牌信息的对象，其中必须包含id以标识要更新的品牌
    * @returns 返回更新后的品牌对象
    */
-  update(body: TrademarkDto) {
-    return this.prisma.trademark.update({
+  async update(body: ITrademarkDto) {
+    const imageRelation= {
+      type: 2,
+      tid: body.id,
+      logoUrl: body.logoUrl
+    }
+    const findExist = await this.fileService.selectImageRelationByUrl(imageRelation)
+    const trademarkOld = await this.selectOne(body.id)
+    const trOldDto = {
+      type: 2,
+      tid:trademarkOld.id,
+      imageId:trademarkOld.imageId
+    }
+    const imageRelationOld = await this.fileService.selectImageRelation(trOldDto)
+    let data
+    if (!findExist) {
+      const nowImageRelation = await this.fileService.addImageRelation(imageRelation)
+      await this.fileService.removeImageRelation(imageRelationOld.id)
+      data = {
+        tmName: body.tmName,
+        imageId: nowImageRelation.imageId
+      }
+    } else {
+      data = {
+        tmName: body.tmName,
+      }
+    }
+    return await this.prisma.trademark.update({
       where: {
         id: body.id,
       },
-      data: body,
+      data
     });
   }
 
@@ -113,11 +115,29 @@ export class TrademarkService {
    * @param id 要删除的品牌的ID
    * @returns 返回一个表示操作成功或失败的对象
    */
-  remove(id: number) {
+  async remove(id: number) {
+    const trademark = await this.selectOne(id)
+    const data = {
+      type:2,
+      tid: trademark.id,
+      imageId:trademark.imageId,
+    }
+    const imageRelation = await this.fileService.selectImageRelation(data)
+    await this.fileService.removeImageRelation(imageRelation.id)
     return this.prisma.trademark.delete({
       where: {
-        id,
+        id
       },
     });
+  }
+
+  /**
+   * 根据id查询单个品牌数据
+   * @param id
+   */
+  selectOne(id: number) {
+    return this.prisma.trademark.findFirst({
+      where: { id }
+    })
   }
 }

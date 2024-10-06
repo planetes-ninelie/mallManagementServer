@@ -2,8 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Sku, Spu } from '@prisma/client';
 import { successList } from 'src/utils/response';
 import { PrismaService } from '../prisma/prisma.service';
-import { CategoryLevel } from './enum';
-import { ICreateCategory, ICreateOrUpdateAttr, SkuInfo, SpuInfo } from './interface';
+import { ICreateOrUpdateAttr, SkuInfo, SpuInfo } from './interface';
 
 @Injectable()
 export class ProductService {
@@ -258,24 +257,6 @@ export class ProductService {
       include: {
         spuSaleAttrValueList: true,
       },
-    });
-  }
-
-  /* 分类相关 */
-  // 获取分类，三个级别的分类都调这个服务
-  getCategory(level: CategoryLevel, id: number = 0) {
-    return this.prisma.category.findMany({
-      where: {
-        level,
-        pid: id,
-      },
-    });
-  }
-
-  // 创建分类
-  createCategory(body: ICreateCategory) {
-    return this.prisma.category.create({
-      data: body,
     });
   }
 

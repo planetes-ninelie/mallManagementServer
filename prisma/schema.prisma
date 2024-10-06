@@ -67,17 +67,32 @@ model Menu {
 
 // 图片表
 model Image {
-  id         Int         @id @default(autoincrement())
-  url        String
+  id            Int             @id @default(autoincrement())
+  url           String
   // 文件的hash值
-  hash       String
-  createTime DateTime    @default(now()) @map("createTime")
-  updateTime DateTime    @updatedAt @map("updateTime")
+  hash          String
+  createTime    DateTime        @default(now()) @map("createTime")
+  updateTime    DateTime        @updatedAt @map("updateTime")
   // 引用次数，在管理表时，为0时删除该数据
-  num        Int         @default(0)
-  trademark  Trademark[]
+  num           Int             @default(0)
+  trademark     Trademark[]
+  imageRelation ImageRelation[]
 
   @@map("image")
+}
+
+// 图片关系表
+model ImageRelation {
+  id         Int      @id @default(autoincrement())
+  // 1为用户头像  2为品牌头像  3为Spu图标 4为sku图标
+  type       Int?
+  // 对应类型表的id
+  tid        Int?
+  imageId    Int?     @map("image_id")
+  image      Image?   @relation(fields: [imageId], references: [id])
+  createTime DateTime @default(now()) @map("create_time")
+
+  @@map("image_relation")
 }
 
 // 品牌表
@@ -86,7 +101,7 @@ model Trademark {
   tmName     String
   createTime DateTime @default(now()) @map("createTime")
   updateTime DateTime @updatedAt @map("updateTime")
-  imageId    Int?
+  imageId    Int?     @map("image_id")
   image      Image?   @relation(fields: [imageId], references: [id])
   spus       Spu[]
 
@@ -247,16 +262,4 @@ model SkuAttrValue {
 
   @@id([attrValueId, skuId])
   @@map("sku_attr_value")
-}
-
-model ImageRelation {
-  id         Int      @id @default(autoincrement())
-  // 1为用户头像  2为品牌头像  3为Spu图标 4为sku图标
-  type       Int?
-  // 对应类型表的id
-  tid        Int?
-  imageId    Int?     @map("image_id")
-  createTime DateTime @default(now()) @map("create_time")
-
-  @@map("image_relation")
 }
