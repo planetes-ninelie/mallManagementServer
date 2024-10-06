@@ -1,9 +1,9 @@
 import {
   Body,
-  Controller,
+  Controller, Delete,
   HttpException,
-  HttpStatus,
-  Post
+  HttpStatus, Param,
+  Post,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody,ApiOperation, ApiTags } from '@nestjs/swagger';
 import { IUpdateTidDto, updateTidDto } from './file.dto';
@@ -24,5 +24,11 @@ export class FileController {
       throw new HttpException('请携带参数type，1为用户头像，2为品牌图标，3为Spu图标，4为sku图标', HttpStatus.OK);
     }
     return this.fileService.addImageRelation(body)
+  }
+
+  @ApiOperation({summary:'根据图片id删除图片以及相关关系'})
+  @Delete('deleteImage')
+  deleteImage(@Param('id') id: number) {
+    return this.fileService.deleteImage(id)
   }
 }

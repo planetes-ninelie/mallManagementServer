@@ -24,8 +24,10 @@ export class TrademarkController {
     return this.trademarkService.create(body);
   }
 
+  @ApiOperation({summary:'修改品牌'})
+  @ApiBody({type: TrademarkDto})
   @Put('update')
-  update(@Body() body: TrademarkDto) {
+  update(@Body() body: ITrademarkDto) {
     return this.trademarkService.update(body);
   }
 
@@ -34,8 +36,4 @@ export class TrademarkController {
     return this.trademarkService.remove(id);
   }
 
-  // @Get('getTrademarkList')
-  // getTrademarkList() {
-  //   return this.trademarkService.getTrademarkList();
-  // }
 }
