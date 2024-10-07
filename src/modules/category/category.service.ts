@@ -145,6 +145,9 @@ export class CategoryService {
         name: body.name,
       }
     })
+    if(category === undefined || category === null) {
+      return
+    }
     const nameRole = !(category || (category.name === body.name))
     if (nameRole) {
       throw new HttpException(`类型名称 ${category.name} 已存在，请重新输入新的类型名称`,HttpStatus.OK)
