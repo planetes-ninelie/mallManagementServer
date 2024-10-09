@@ -21,6 +21,14 @@ export class CategoryService {
     });
   }
 
+  selectOne(id: number) {
+    return this.prisma.category.findUnique({
+      where: {
+        id
+      }
+    })
+  }
+
   /**
    * 创建分类
    * @param body

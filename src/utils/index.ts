@@ -166,3 +166,21 @@ export function transformToOption(arr: InputItem[], key: string = 'id'): Transfo
     return newItem;
   });
 }
+
+/**
+ * 利用set查找数组中重复的元素
+ * @param arr
+ */
+export function findDuplicates(arr) {
+  const seen = new Set();
+  const duplicates = [];
+
+  for (const num of arr) {
+    if (seen.has(num)) {
+      duplicates.push(num);
+    } else {
+      seen.add(num);
+    }
+  }
+  return duplicates;
+}

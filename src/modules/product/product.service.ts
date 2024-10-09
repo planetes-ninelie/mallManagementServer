@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Sku, Spu } from '@prisma/client';
 import { successList } from 'src/utils/response';
 import { PrismaService } from '../prisma/prisma.service';
-import { ICreateOrUpdateAttr, SkuInfo, SpuInfo } from './interface';
+import { SkuInfo, SpuInfo } from './interface';
 
 @Injectable()
 export class ProductService {
@@ -258,72 +258,6 @@ export class ProductService {
         spuSaleAttrValueList: true,
       },
     });
-  }
-
-  /* 属性相关 */
-  // 获取属性列表
-  async attrInfoList(categoryFirstId: number, categorySecondId: number, categoryThirdId: number) {
-    const result = await this.prisma.attr.findMany({
-      where: {
-        categoryId: categoryThirdId,
-      },
-      orderBy: {
-        createTime: 'desc',
-      },
-      include: {
-        attrValue: true,
-      },
-    });
-
-    // 将attrValue改成前端用的attrValueList
-    const attrList = result.map(({ attrValue, ...item }) => ({
-      ...item,
-      attrValueList: attrValue,
-    }));
-
-    return attrList;
-  }
-
-  // 删除属性
-  deleteAttr(id: number) {
-    return this.prisma.attr.delete({
-      where: {
-        id,
-      },
-    });
-  }
-
-  // 修改或添加属性
-  async saveAttrInfo(body: ICreateOrUpdateAttr) {
-    const attrData = {
-      attrName: body.attrName,
-      categoryId: body.categoryId,
-      categoryLevel: body.categoryLevel,
-    };
-
-    const result = await this.prisma.attr.upsert({
-      where: { id: body?.id || 0 },
-      update: {
-        ...attrData,
-        attrValue: {
-          deleteMany: {}, // 删除现有属性值
-          createMany: {
-            data: body.attrValueList.map(({ flag, attrId, ...rest }) => rest),
-          },
-        },
-      },
-      create: {
-        ...attrData,
-        attrValue: {
-          create: body.attrValueList.map(({ flag, attrId, ...rest }) => rest),
-        },
-      },
-      include: {
-        attrValue: true,
-      },
-    });
-
-    return result;
   }
 
   /* 获取sku详情 */
