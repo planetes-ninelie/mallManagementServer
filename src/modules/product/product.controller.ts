@@ -1,33 +1,11 @@
 import { Body, Controller, Delete, Get, Param, Post, Query } from '@nestjs/common';
-import { ICreateOrUpdateAttr, SkuInfo, SpuInfo } from './interface';
+import { SkuInfo, SpuInfo } from './interface';
 import { ProductService } from './product.service';
 
 @Controller('')
 export class ProductController {
   constructor(private readonly productService: ProductService) { }
-
-
-  /* 平台属性相关接口！！！！！！！！！！！！！！！！！！！ */
-  // 属性列表
-  @Get('attrInfoList/:categoryFirstId/:categorySecondId/:categoryThirdId')
-  attrInfoList(@Param('categoryFirstId') categoryFirstId: number, @Param('categorySecondId') categorySecondId: number, @Param('categoryThirdId') categoryThirdId: number) {
-    return this.productService.attrInfoList(categoryFirstId, categorySecondId, categoryThirdId);
-  }
-
-  // 创建或更新属性
-  @Post('saveAttrInfo')
-  saveAttrInfo(@Body() body: ICreateOrUpdateAttr) {
-    return this.productService.saveAttrInfo(body);
-  }
-
-  // 删除属性
-  @Delete('deleteAttr/:id')
-  deleteAttr(@Param('id') id: number) {
-    return this.productService.deleteAttr(id);
-  }
-
   /* spu相关接口！！！！！！！！！！！！！！！！！！！！！！！！！！！！！ */
-
 
   // 查找spu图片列表
   @Get('spuImageList/:id')

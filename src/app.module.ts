@@ -10,6 +10,7 @@ import { UploadModule } from './modules/upload/upload.module';
 import { UserModule } from './modules/user/user.module';
 import { FileModule } from './modules/file/file.module';
 import { CategoryModule } from './modules/category/category.module';
+import { AttrModule } from './modules/attr/attr.module';
 
 @Module({
   imports: [
@@ -26,7 +27,7 @@ import { CategoryModule } from './modules/category/category.module';
           },
           {
             path: 'product',
-            children: [ProductModule, TrademarkModule,CategoryModule,UploadModule,FileModule],
+            children: [ProductModule, TrademarkModule,CategoryModule,AttrModule,UploadModule,FileModule],
           },
         ],
       },
@@ -35,6 +36,7 @@ import { CategoryModule } from './modules/category/category.module';
     MenuModule,
     TrademarkModule,
     CategoryModule,
+    AttrModule,
     UploadModule,
     ProductModule,
     FileModule
