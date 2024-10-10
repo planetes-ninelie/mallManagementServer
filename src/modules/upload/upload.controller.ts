@@ -2,18 +2,17 @@ import {
   Body,
   Controller,
   Delete,
-  HttpException,
-  HttpStatus,
   Param,
-  Post, Put,
+  Post,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadService } from './upload.service';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import { UploadDto } from './upload.dto';
 
-@ApiTags('上传头像')
+@ApiTags('上传文件')
 @ApiBearerAuth()
 @Controller('fileUpload')
 export class UploadController {
@@ -41,8 +40,15 @@ export class UploadController {
 
   @ApiOperation({summary:'根据id删除图片'})
   @ApiParam({name:'id',required:true,type:Number,description:'图片id',example:1})
-  @Delete('/delete:id')
+  @Delete('/delete/:id')
   deleteFile(@Param('id') id: number) {
-    return this.uploadService.deleteFile(id)
+    return this.uploadService.deleteFile("",id)
+  }
+
+  @ApiOperation({summary:'根据url删除图片'})
+  @ApiBody({type: UploadDto})
+  @Post('/delete')
+  deleteFileByUrl(@Body('url') url: string) {
+    return this.uploadService.deleteFile(url)
   }
 }
