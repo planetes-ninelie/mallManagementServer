@@ -1,10 +1,10 @@
-import { Body, Controller, Get, Headers, Post, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Post, Req, UseInterceptors } from '@nestjs/common';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { extractToken } from 'src/utils';
 import { AuthService } from './auth.service';
 import { Public } from './public.decorator';
 import { ApiBearerAuth, ApiBody, ApiHeaders, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { loginDto , ILoginDto } from './dto';
+import { loginDto , ILoginDto } from './auth.dto';
 
 @ApiBearerAuth()
 @ApiTags('鉴权')
@@ -34,48 +34,18 @@ export class AuthController {
     return await this.authService.logout(token);
   }
 
+  // @Get('info')
+  // @ApiOperation({summary:'查看用户信息'})
+  // info(@Req() request) {
+  //   return this.authService.info(request);
+  // }
   @Get('info')
   @ApiOperation({summary:'查看用户信息'})
   info() {
     return {
       routes: [
-        'aaa',
-        'User',
-        'Category',
-        'Discount',
-        'ActivityEdit',
-        'CouponRule',
-        'Product',
-        'Activity',
-        'CouponAdd',
-        'Trademark',
-        'test1',
-        'Attr',
-        'ActivityAdd',
-        'ASD ',
-        'CouponEdit',
-        'OrderShow',
-        '111',
-        'Permission',
-        'Spu',
-        'UserList',
-        'ClientUser',
-        'Order',
-        '33',
-        "t't",
-        'Coupon',
-        'permision',
-        '6123',
         'Acl',
-        'ActivityRule',
-        'Role',
-        'RoleAuth',
-        '222',
-        'Refund',
-        '1223',
-        'x',
-        'OrderList',
-        'Sku',
+        'Product'
       ],
       buttons: [
         'cuser.detail',
@@ -108,6 +78,7 @@ export class AuthController {
         'btn.Trademark.update',
         'btn.Trademark.remove',
         'btn.Attr.add',
+        'btn.Attr.addSale',
         'btn.Attr.update',
         'btn.Attr.remove',
         'btn.Spu.add',
@@ -119,11 +90,7 @@ export class AuthController {
         'btn.Sku.update',
         'btn.Sku.detail',
         'btn.Sku.remove',
-        'btn.all',
-        'btn.test.2',
-        'aaabbb',
-        '',
-        '22223333444',
+        'btn.all'
       ],
       roles: ['超级管理员', 'gis数据工程师', '运维工程师', 'ui设计师', '实施工程师'],
       name: 'admin',

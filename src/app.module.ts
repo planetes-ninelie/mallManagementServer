@@ -11,6 +11,8 @@ import { UserModule } from './modules/user/user.module';
 import { FileModule } from './modules/file/file.module';
 import { CategoryModule } from './modules/category/category.module';
 import { AttrModule } from './modules/attr/attr.module';
+import { SpuModule } from './modules/spu/spu.module';
+import { SkuModule } from './modules/sku/sku.module';
 
 @Module({
   imports: [
@@ -27,7 +29,7 @@ import { AttrModule } from './modules/attr/attr.module';
           },
           {
             path: 'product',
-            children: [ProductModule, TrademarkModule,CategoryModule,AttrModule,UploadModule,FileModule],
+            children: [TrademarkModule,CategoryModule,AttrModule,SpuModule,SkuModule,UploadModule,FileModule],
           },
         ],
       },
@@ -37,8 +39,9 @@ import { AttrModule } from './modules/attr/attr.module';
     TrademarkModule,
     CategoryModule,
     AttrModule,
+    SpuModule,
     UploadModule,
-    ProductModule,
+    SkuModule,
     FileModule
   ],
   controllers: [],

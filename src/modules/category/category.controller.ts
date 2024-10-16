@@ -6,7 +6,7 @@ import { CreateCategoryDto, ICreateCategoryDto, IUpdateCategoryDto, UpdateCatego
 
 @ApiBearerAuth()
 @ApiTags('分类管理')
-@Controller('')
+@Controller('category')
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
@@ -30,20 +30,20 @@ export class CategoryController {
 
   @ApiOperation({summary:'创建分类'})
   @ApiBody({type:CreateCategoryDto})
-  @Post('category/create')
+  @Post('create')
   createCategory(@Body() body: ICreateCategoryDto) {
     return this.categoryService.createCategory(body);
   }
 
   @ApiOperation({summary:'修改分类名称'})
   @ApiBody({type: UpdateCategoryDto})
-  @Put('category/update')
+  @Put('update')
   updateCategory(@Body() body: IUpdateCategoryDto) {
     return this.categoryService.updateCategory(body)
   }
 
   @ApiOperation({summary:'根据id删除分类以及子分类'})
-  @Delete('category/delete/:id')
+  @Delete('delete/:id')
   deleteCategory(@Param('id') id: number) {
     return this.categoryService.deleteCategory(id)
   }

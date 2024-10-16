@@ -35,6 +35,29 @@ export class AttrService {
   }
 
   /**
+   * 查询所有销售属性
+   */
+  async saleAttrInfoList() {
+    const result = await this.prisma.attr.findMany({
+      where: {
+        type: 2
+      },
+      orderBy: {
+        createTime: 'desc',
+      },
+      include: {
+        attrValue: true,
+      },
+    });
+
+    // 将attrValue改成前端用的attrValueList
+    return result.map(({ attrValue, ...item }) => ({
+      ...item,
+      attrValueList: attrValue,
+    }));
+  }
+
+  /**
    * 删除属性同时会删除相应的属性值
    * @param id
    */
@@ -49,9 +72,10 @@ export class AttrService {
   /**
    * 修改或添加属性
    * @param body
+   * @param type
    */
-  async saveAttrInfo(body: ICreateOrUpdateAttr) {
-    const { attrValueIdList,updateHasIdAttrValueList }  = await this.addOrUpdateRole(body)
+  async saveAttrInfo(body: ICreateOrUpdateAttr,type:number) {
+    const { attrValueIdList,updateHasIdAttrValueList }  = await this.addOrUpdateRole(body,type)
     const newAttrValueList = body.attrValueList
       .filter(({ id }) => id === undefined)
       .map(({ flag, attrId, id, ...rest }) => ({ ...rest }));
@@ -68,6 +92,7 @@ export class AttrService {
     const attrData = {
       attrName: body.attrName,
       categoryId: body.categoryId,
+      type: type
     };
     const data = {
       where: { id: body?.id || 0 },
@@ -86,19 +111,19 @@ export class AttrService {
       },
     }
     const attrValue = data.update.attrValue
+    if (newAttrValueList.length > 0) {
+      attrValue.createMany = {
+        data: newAttrValueList
+      }
+    }
     if (deleteAttrValueIdList.length > 0) {
-      attrValue.deleteMany = {
+      await this.prisma.attrValue.deleteMany({
         where: {
           id: {
             in: deleteAttrValueIdList // 删除不在表单里的属性值
           }
         }
-      }
-    }
-    if (newAttrValueList.length > 0) {
-      attrValue.createMany = {
-        data: newAttrValueList
-      }
+      })
     }
     if (updateHasIdAttrValueList.length > 0) {
       for (const { id, ...rest } of updateHasIdAttrValueList) {
@@ -140,7 +165,7 @@ export class AttrService {
         attrId
       }
     }
-    if (attrValueNameList > 0) {
+    if (attrValueNameList.length > 0) {
       data.where.valueName = {
         in:attrValueNameList
       }
@@ -161,37 +186,33 @@ export class AttrService {
   }
 
   /**
-   * 根据id列表删除属性值
-   * @param valueIdList
-   */
-  deleteAttrValueByIdList(valueIdList:number[]) {
-    return this.prisma.attrValue.deleteMany({
-      where: {
-        id: {
-          in: valueIdList
-        }
-      }
-    })
-  }
-
-  /**
    * 新增和更新的规则
    * @param body
+   * @param type
    * @return attrValueIdList 表单的属性值id列表
    */
-  private async addOrUpdateRole(body: ICreateOrUpdateAttr) {
-    const category = await this.categoryService.selectOne(body.categoryId);
-    if (!category) {
-      throw new HttpException(`分类id为${body.categoryId} 不存在！`, HttpStatus.OK);
+  private async addOrUpdateRole(body: ICreateOrUpdateAttr,type:number) {
+    if (type === 1) {
+      const category = await this.categoryService.selectOne(body.categoryId);
+      if (!category) {
+        throw new HttpException(`分类id为${body.categoryId} 不存在！`, HttpStatus.OK);
+      }
+      if (category.level !== 3) {
+        throw new HttpException(`分类名称 ${category.name} 不是三级分类！`, HttpStatus.OK);
+      }
     }
-    if(category.level !== 3) {
-      throw new HttpException(`分类名称 ${category.name} 不是三级分类！`, HttpStatus.OK);
+
+    let attrs
+    if(type === 1) {
+      attrs = await this.selectAttrByName(body.attrName,body.categoryId)
+    } else {
+      attrs = await this.findBySaleName(body.attrName,2)
     }
-    const attr = await this.selectAttrByName(body.attrName,body.categoryId)
-    const attrNameRole = (attr.length > 0 && !body.id) || (attr.length > 1 && body.id > 0)
+    const attrNameRole = (attrs.length > 0 && body.id === 0) || (attrs.length > 1 && body.id > 0)
     if (attrNameRole) {
       throw new HttpException(`属性名称 ${body.attrName} 已存在！`, HttpStatus.OK);
     }
+
     const attrValueIdList:number[] = []
     const createAndUpdateAttrValueNameList = []
     const updateHasIdAttrValueList = []
@@ -221,4 +242,18 @@ export class AttrService {
     return { attrValueIdList,updateHasIdAttrValueList }
   }
 
+  /**
+   * 根据属性名字和type查询属性数据
+   * @param name
+   * @param type
+   * @private
+   */
+  private async findBySaleName(name:string,type) {
+    return this.prisma.attr.findMany({
+      where: {
+        attrName: name,
+        type
+      }
+    })
+  }
 }

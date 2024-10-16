@@ -24,7 +24,7 @@ export class AuthGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest();
-    const CONSTANT_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUsInVzZXJuYW1lIjoiYWRtaW4iLCJpYXQiOjE3MjQyMjg3OTksImV4cCI6MTcyNDMxNTE5OX0.66_X5B_HhdoY77b7Rz8Fs9RkEhtZs4RqF9Z_VmeX_TI"
+    const CONSTANT_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
 
     if(request.headers.authorization == `Bearer ${CONSTANT_TOKEN}`) {
 
