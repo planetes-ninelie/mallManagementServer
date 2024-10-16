@@ -2,7 +2,6 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
-import { redisStore } from 'cache-manager-redis-yet';
 import { UserModule } from '../user/user.module';
 import { AuthController } from './auth.controller';
 import { AuthGuard } from './auth.guard';

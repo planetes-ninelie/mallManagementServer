@@ -156,21 +156,21 @@ export class FileService {
    */
   private async updateNum(image,isAdd:boolean) {
     const num = image.num + (isAdd ? 1: -1)
+    const url = image.url
     const id = image.id
+    await this.prisma.image.update({
+      where: {
+        id
+      },
+      data:{
+        num
+      }
+    })
     if (num === 0) {
-      await this.uploadService.deleteFile(id)
+      await this.uploadService.deleteFile(url)
       await this.prisma.image.delete({
         where:{
           id
-        }
-      })
-    } else {
-      await this.prisma.image.update({
-        where: {
-          id
-        },
-        data:{
-          num
         }
       })
     }

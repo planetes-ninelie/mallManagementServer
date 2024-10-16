@@ -95,17 +95,17 @@ export class UserService {
    */
   async update(body: IUpdateUserDto) {
     if (!body.username) {
-      throw new HttpException(`用户昵称不能为空，请填写角色名称`, HttpStatus.OK);
+      throw new HttpException(`用户昵称不能为空，请填写用户昵称`, HttpStatus.OK);
     }
     const user = await this.findByUsername(body.username);
-    if (!user) {
+    const checkUser = !user || user.id === body.id
+    if (!checkUser) throw new HttpException(`用户昵称 ${body.username} 已经存在，请填写其他用户名`, HttpStatus.OK);
+    else {
       // 使用Prisma客户端更新用户信息
       return this.prisma.user.update({
         where: { id: body.id }, // 根据ID定位到需要更新的用户
         data: body, // 提供更新后的用户数据
       });
-    } else {
-      throw new HttpException(`用户昵称 ${body.username} 已经存在，请填写其他用户名`, HttpStatus.OK);
     }
   }
 
@@ -152,7 +152,7 @@ export class UserService {
    * @returns User 返回Prisma客户端的查询结果，如果找到该用户，则返回用户信息，否则返回null
    */
   findByUsername(username: string) {
-    // 使用Prisma客户端查询数据库中username为指定值的第一个用户
+    // 使用Prisma客户端查询数据库中username为指定值的第一个用户(username唯一)
     return this.prisma.user.findFirst({
       where: { username: username },
     });
@@ -235,5 +235,31 @@ export class UserService {
       data: data, // 提供更新后的用户数据
     });
     return null;
+  }
+
+  /**
+   * 根据用户id查用户信息
+   * @param userId
+   */
+  findByUserId(userId: number) {
+    return this.prisma.user.findFirst({
+      where: {
+        id: userId
+      },
+      include: {
+        roles: true
+        // roles: {
+        //   include: {
+        //     role: {
+        //       menus: {
+        //         include: {
+        //           menu: true
+        //         }
+        //       }
+        //     }
+        //   }
+        // }
+      }
+    })
   }
 }

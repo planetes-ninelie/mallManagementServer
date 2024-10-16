@@ -67,16 +67,20 @@ model Menu {
 
 // 图片表
 model Image {
-  id            Int             @id @default(autoincrement())
-  url           String
+  id         Int      @id @default(autoincrement())
+  url        String
+  name       String?
   // 文件的hash值
-  hash          String
-  createTime    DateTime        @default(now()) @map("createTime")
-  updateTime    DateTime        @updatedAt @map("updateTime")
+  hash       String
+  createTime DateTime @default(now()) @map("createTime")
+  updateTime DateTime @updatedAt @map("updateTime")
   // 引用次数，在管理表时，为0时删除该数据
-  num           Int             @default(0)
+  num        Int      @default(0)
+
+  spus          SpuImage[]
   trademark     Trademark[]
   imageRelation ImageRelation[]
+  skus          Sku[]
 
   @@map("image")
 }
@@ -125,12 +129,15 @@ model Category {
 
 // 商品属性表
 model Attr {
-  id         Int      @id @default(autoincrement())
+  id         Int       @id @default(autoincrement())
   attrName   String
-  createTime DateTime @default(now()) @map("createTime")
-  updateTime DateTime @updatedAt @map("updateTime")
-  categoryId Int
-  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  createTime DateTime  @default(now()) @map("createTime")
+  updateTime DateTime  @updatedAt @map("updateTime")
+  // 销售属性不需要关联分类id
+  categoryId Int?
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  // type为1时是平台属性，为销售属性
+  type       Int?
 
   attrValue AttrValue[]
   spus      SpuAttr[]
@@ -165,9 +172,10 @@ model Spu {
   createTime  DateTime  @default(now()) @map("createTime")
   updateTime  DateTime  @updatedAt @map("updateTime")
 
+  images     SpuImage[]
   attrs      SpuAttr[]
   attrValues SpuAttrValue[]
-  skus       SpuSku[]
+  sku        Sku[]
 
   @@map("spu")
 }
@@ -180,11 +188,14 @@ model Sku {
   skuDesc String?
   weight  Float?
   isSale  Int?    @default(0)
+  spuId   Int
+  spu     Spu     @relation(fields: [spuId], references: [id], onDelete: Cascade)
+  imageId Int
+  image   Image   @relation(fields: [imageId], references: [id], onDelete: Cascade)
 
   createTime DateTime @default(now()) @map("createTime")
   updateTime DateTime @updatedAt @map("updateTime")
 
-  spus       SpuSku[]
   attrValues SkuAttrValue[]
 
   @@map("sku")
@@ -240,16 +251,16 @@ model SpuAttrValue {
   @@map("spu_attr_value")
 }
 
-// spu_sku关系表
-model SpuSku {
-  Spu        Spu      @relation(fields: [spuId], references: [id])
+// spu_image关系表
+model SpuImage {
+  spu        Spu      @relation(fields: [spuId], references: [id])
   spuId      Int
-  Sku        Sku      @relation(fields: [skuId], references: [id])
-  skuId      Int
+  image      Image    @relation(fields: [imageId], references: [id])
+  imageId    Int
   createTime DateTime @default(now()) @map("create_time")
 
-  @@id([skuId, spuId])
-  @@map("spu_sku")
+  @@id([imageId, spuId])
+  @@map("spu_image")
 }
 
 // sku_属性值

@@ -27,7 +27,7 @@ export class MenuService {
       throw new HttpException('菜单名称不能为空，请填写菜单名称',HttpStatus.OK);
     }
     const menu = await this.findByName(name)
-    if (!menu) {
+    if (menu.length === 0) {
       return this.prisma.menu.create({
         data: {
           code,
@@ -47,7 +47,7 @@ export class MenuService {
    * @param name 菜单名称
    */
   findByName(name: string) {
-    return this.prisma.menu.findFirst({
+    return this.prisma.menu.findMany({
       where:{name}
     })
   }
@@ -63,7 +63,8 @@ export class MenuService {
       throw new HttpException('菜单名称不能为空，请填写菜单名称',HttpStatus.OK);
     }
     const menu = await this.findByName(name)
-    if(!menu) {
+    const check = (menu.length === 1 && menu.id !== body.id) || (menu.length === 0)
+    if(check) {
       return this.prisma.menu.update({
         where: {
           id,

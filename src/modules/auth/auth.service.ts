@@ -55,4 +55,11 @@ export class AuthService {
     await this.cacheManager.del(token);
     return null;
   }
+
+
+  async info(request) {
+    const userId = request.userId;
+    const info = await this.userService.findByUserId(userId)
+    return info
+  }
 }

@@ -41,6 +41,7 @@ export class UploadService {
       const data = {
         num: 0,
         url: `${this.getHostAndPort()}/${uploadPath}`,
+        name: file.originalname,
         hash, // 将哈希值保存到数据库
       };
       await this.prisma.image.create({
@@ -56,14 +57,14 @@ export class UploadService {
     }
   }
 
-  async deleteFile(url,id: number = 0,): Promise<boolean> {
+  async deleteFile(url,id: number = 0,): Promise<string> {
     try {
       const checkParams = (id === 0 && url === "") || (id !== 0 && url !== "")
       // 从数据库中获取文件记录
       if (checkParams) {
-        throw new HttpException('请传入正确的参数',HttpStatus.OK)
+        return "请传入正确的参数"
+        // throw new HttpException('请传入正确的参数',HttpStatus.OK)
       }
-      // 从数据库中获取文件记录
       const fileRecord: IUploadEntity = await this.prisma.image.findFirst({
         where: { OR: [{ id }, { url } ] },
       });
@@ -84,7 +85,7 @@ export class UploadService {
           await this.prisma.image.deleteMany({
             where: { OR: [{ id }, { url } ] },
           });
-          return true;
+          return "成功";
         }
       });
     } catch (error) {

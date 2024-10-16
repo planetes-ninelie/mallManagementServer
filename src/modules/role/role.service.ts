@@ -76,7 +76,8 @@ export class RoleService {
       throw new HttpException(`角色名称不能为空，请填写角色名称`, HttpStatus.OK);
     }
     const role = await this.findByName(body.roleName)
-    if (!role) {
+    const checkRole = !role || role.id === body.id
+    if (checkRole) {
       return this.prisma.role.update({
         where: { id: body.id },
         data: body,

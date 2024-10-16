@@ -5,10 +5,13 @@ import { FileService } from '../file/file.service';
 import { IUpdateTidDto } from '../file/file.dto';
 import { ITrademarkVo } from './trademark.vo';
 import { ITrademarkDto } from './trademark.dto';
+import { SpuService } from '../spu/spu.service';
 
 @Injectable()
 export class TrademarkService {
-  constructor(private readonly prisma: PrismaService,private readonly fileService: FileService) {}
+  constructor(private readonly prisma: PrismaService,
+              private readonly fileService: FileService,
+              private readonly spuService: SpuService) {}
 
   /**
    * 找到所有品牌，并根据页码和页面大小进行分页。
@@ -117,6 +120,10 @@ export class TrademarkService {
    */
   async remove(id: number) {
     const trademark = await this.selectOne(id)
+    const spuIds = trademark.spus.map(item => item.id)
+    for (const spuId of spuIds) {
+      await this.spuService.deleteSpu(spuId)
+    }
     const data = {
       type:2,
       tid: trademark.id,
@@ -137,7 +144,22 @@ export class TrademarkService {
    */
   selectOne(id: number) {
     return this.prisma.trademark.findFirst({
-      where: { id }
+      where: { id },
+      include: {
+        image: {
+          select: {
+            url:true
+          }
+        },
+        spus: true
+      }
     })
+  }
+
+  /**
+   * 查询品牌名称列表
+   */
+  findNameList() {
+    return this.prisma.trademark.findMany()
   }
 }

@@ -6,11 +6,8 @@ import { Response } from 'express';
 export class PrismaExceptionFilter implements ExceptionFilter {
   catch(exception: PrismaClientKnownRequestError, host: ArgumentsHost) {
     console.log('PrismaExceptionFilter');
-
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
-
-    // console.log(exception);
 
     let message: string;
     if (exception.code === 'P2025') {
