@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { SkuService } from './sku.service';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { ISkuInfo,SkuInfo } from './sku.dto';
+import { ISkuInfo, IUpdateSkuInfo, SkuInfo, UpdateSkuInfo } from './sku.dto';
 
 @ApiBearerAuth()
 @ApiTags('sku')
@@ -44,5 +44,12 @@ export class SkuController {
   @Delete('deleteSku/:skuId')
   deleteSku(@Param('skuId') skuId: number) {
     return this.skuService.deleteSku(skuId);
+  }
+
+  @ApiOperation({summary:'修改sku'})
+  @ApiBody({type:UpdateSkuInfo})
+  @Post('updateSkuInfo')
+  updateSkuInfo(@Body() skuInfo: IUpdateSkuInfo) {
+    return this.skuService.updateSkuInfo(skuInfo)
   }
 }
