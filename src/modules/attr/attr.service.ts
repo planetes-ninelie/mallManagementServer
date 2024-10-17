@@ -6,7 +6,8 @@ import { findDuplicates } from '../../utils';
 
 @Injectable()
 export class AttrService {
-  constructor(private readonly prisma: PrismaService,private readonly categoryService: CategoryService) {}
+  constructor(private readonly prisma: PrismaService,
+              private readonly categoryService: CategoryService) {}
 
   /**
    * 获取属性列表
@@ -58,15 +59,47 @@ export class AttrService {
   }
 
   /**
-   * 删除属性同时会删除相应的属性值
-   * @param id
+   * 删除属性同时会删除相应的属性值以及与spu的关系
+   * @param id 属性id
    */
-  deleteAttr(id: number) {
-    return this.prisma.attr.delete({
+  async deleteAttr(id: number) {
+    const attrValues = await this.findAttrValuesByAttrId(id)
+    const attrValueIds = attrValues.map(item => item.id);
+    const deleteSpuAttr = this.prisma.spuAttr.deleteMany({
+      where: {
+        attrId: id
+      }
+    })
+    if (attrValueIds.length > 0) {
+      await this.prisma.spuAttrValue.deleteMany({
+        where: {
+          attrValueId: {
+            in: attrValueIds,
+          }
+        }
+      })
+      await this.prisma.skuAttrValue.deleteMany({
+        where: {
+          attrValueId: {
+            in: attrValueIds,
+          }
+        }
+      })
+      await this.prisma.attrValue.deleteMany({
+        where: {
+          id: {
+            in: attrValueIds
+          }
+        }
+      })
+    }
+    const deleteAttr = this.prisma.attr.delete({
       where: {
         id,
       },
     });
+    return await this.prisma.$transaction([
+      deleteSpuAttr,deleteAttr])
   }
 
   /**
@@ -257,4 +290,15 @@ export class AttrService {
     })
   }
 
+  /**
+   * 根据attrId查询attrValue数据列表
+   * @param attrId
+   */
+  findAttrValuesByAttrId(attrId:number) {
+    return this.prisma.attrValue.findMany({
+      where: {
+        attrId
+      }
+    })
+  }
 }

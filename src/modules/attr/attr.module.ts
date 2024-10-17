@@ -6,7 +6,7 @@ import { CategoryModule } from '../category/category.module';
 @Module({
   controllers: [AttrController],
   providers: [AttrService],
-  imports:[CategoryModule],
-  exports: [AttrService]
+  exports: [AttrService],
+  imports:[CategoryModule]
 })
 export class AttrModule {}

@@ -37,6 +37,7 @@ export class TrademarkController {
     return this.trademarkService.update(body);
   }
 
+  @ApiOperation({summary:'删除品牌（删除指定ID的品牌。同时删除与之关联的spu，以及spu和属性、属性值、图片和sku的关系）'})
   @Delete('remove/:id')
   remove(@Param('id') id: number) {
     return this.trademarkService.remove(id);

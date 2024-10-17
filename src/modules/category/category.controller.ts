@@ -42,9 +42,9 @@ export class CategoryController {
     return this.categoryService.updateCategory(body)
   }
 
-  @ApiOperation({summary:'根据id删除分类以及子分类'})
+  @ApiOperation({summary:'根据id删除分类以及子分类（有bug）'})
   @Delete('delete/:id')
   deleteCategory(@Param('id') id: number) {
-    return this.categoryService.deleteCategory(id)
+    // return this.categoryService.deleteCategory(id)
   }
 }

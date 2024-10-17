@@ -72,7 +72,8 @@ export class UploadService {
         throw new HttpException('文件记录不存在',HttpStatus.OK);
       }
       if (fileRecord.num > 0) {
-        throw new HttpException('文件存在引用',HttpStatus.OK);
+        // throw new HttpException('文件存在引用',HttpStatus.OK);
+        return
       }
       // 删除文件系统中的文件
       const filePath = fileRecord.url.split('/').slice(-2).join('/');

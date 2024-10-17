@@ -114,7 +114,7 @@ export class TrademarkService {
   }
 
   /**
-   * 删除指定ID的品牌。
+   * 删除指定ID的品牌。同时删除与之关联的spu，以及spu和属性、属性值、图片和sku的关系
    * @param id 要删除的品牌的ID
    * @returns 返回一个表示操作成功或失败的对象
    */
