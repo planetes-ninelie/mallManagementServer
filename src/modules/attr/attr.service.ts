@@ -234,14 +234,14 @@ export class AttrService {
         throw new HttpException(`分类名称 ${category.name} 不是三级分类！`, HttpStatus.OK);
       }
     }
-
     let attrs
     if(type === 1) {
       attrs = await this.selectAttrByName(body.attrName,body.categoryId)
     } else {
       attrs = await this.findBySaleName(body.attrName,2)
     }
-    const attrNameRole = (attrs.length > 0 && body.id === 0) || (attrs.length > 1 && body.id > 0)
+    const attrNameRole = (attrs.length > 0 && body.id === 0) ||
+      (attrs.length > 1 && body.id > 0) || (attrs.length === 1 && body.id > 0 && body.id !== attrs.id)
     if (attrNameRole) {
       throw new HttpException(`属性名称 ${body.attrName} 已存在！`, HttpStatus.OK);
     }
