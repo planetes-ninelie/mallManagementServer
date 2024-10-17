@@ -184,3 +184,13 @@ export function findDuplicates(arr) {
   }
   return duplicates;
 }
+
+/**
+ * arr2中过滤掉arr1已存在的值，也就是返回arr1所没有而arr2有的
+ * @param arr1
+ * @param arr2
+ */
+export function filterDuplicates(arr1,arr2) {
+  const set = new Set(arr1);
+  return arr2.filter((item) => !set.has(item));
+}

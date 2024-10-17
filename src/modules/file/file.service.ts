@@ -97,6 +97,7 @@ export class FileService {
   /**
    * 新增图片与其他的关系数据
    * @param body type，tid，logoUrl
+   * @Returns 返回图片关系表数据
    */
   async addImageRelation(body: IUpdateTidDto) {
     const image = await this.updateNumByUrl(body.logoUrl,true)
@@ -111,7 +112,7 @@ export class FileService {
   }
 
   /**
-   * 根据id删除图片关系表数据
+   * 根据关系表id删除图片关系表数据
    * @param id
    */
   async removeImageRelation(id) {
@@ -179,5 +180,7 @@ export class FileService {
       num
     }
   }
+
+
 }
 
