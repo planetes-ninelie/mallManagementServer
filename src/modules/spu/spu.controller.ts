@@ -35,9 +35,10 @@ export class SpuController {
     return this.spuService.saveSpuInfo(createSpuDTO);
   }
 
-  // 编辑spu
+  @ApiOperation({summary:'修改spu'})
+  @ApiBody({type:CreateSpuDTO})
   @Post('updateSpuInfo')
-  updateSpuInfo(@Body() spuInfo: SpuInfo) {
+  updateSpuInfo(@Body() spuInfo: ICreateSpuDTO) {
     return this.spuService.updateSpuInfo(spuInfo);
   }
 

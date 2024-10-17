@@ -7,6 +7,7 @@ import { IUpdateTidDto } from '../file/file.dto';
 import { successList } from '../../utils/response';
 import { Spu } from '@prisma/client';
 import { SkuService } from '../sku/sku.service';
+import { filterDuplicates } from '../../utils';
 
 @Injectable()
 export class SpuService {
@@ -64,57 +65,126 @@ export class SpuService {
    * @param spuInfo - 包含SpuInfo数据的对象，其中id为要更新的记录的ID，其他属性为要更新的数据
    * @returns 返回一个Promise，该Promise在事务完成后解析，包含删除和更新操作的结果
    */
-  async updateSpuInfo(spuInfo: SpuInfo) {
-    // 解构出id和其余信息
-    const { id, ...info } = spuInfo;
+  async updateSpuInfo(spuInfo: ICreateSpuDTO) {
+    delete spuInfo.createTime
+    delete spuInfo.updateTime
 
-    // 删除与该SPU关联的销售属性
-    const deleteSaleAttr = this.prisma.saleAttr.deleteMany({
+    const isExistName = await this.selectSpuByName(spuInfo.spuName)
+    const checkName = isExistName.length > 1 || (isExistName.length === 1 && isExistName[0].id !== spuInfo.id)
+    if(checkName) {
+      throw new HttpException(`spu名称 ${isExistName.spuName} 已存在！`,HttpStatus.OK)
+    }
+    if(!spuInfo.spuName) {
+      throw new HttpException('请填写spu名称！',HttpStatus.OK)
+    }
+    if(!spuInfo.tmId) {
+      throw new HttpException('请选择品牌！', HttpStatus.OK);
+    }
+    const { attrs,attrValues,spuImageList,...rest } = spuInfo;
+    const spu = this.prisma.spu.update({
       where: {
-        spuId: id,
-      },
-    });
-
-    // 删除与该SPU关联的图片
-    const deleteSpuImg = this.prisma.spuImg.deleteMany({
-      where: {
-        spuId: id,
-      },
-    });
-
-    // 更新SPU信息，包括基础信息和图片、销售属性列表
-    const updateSpu = this.prisma.spu.update({
-      where: {
-        id: id,
+        id:spuInfo.id
       },
       data: {
-        ...info,
-        spuImageList: {
-          createMany: {
-            data: spuInfo.spuImageList,
-          },
-        },
-        spuSaleAttrList: {
-          create: spuInfo.spuSaleAttrList.map((item) => {
-            return {
-              baseSaleAttrId: item.baseSaleAttrId,
-              saleAttrName: item.saleAttrName,
-              spuSaleAttrValueList: {
-                create: item.spuSaleAttrValueList.map((item2) => {
-                  return {
-                    baseSaleAttrId: item2.baseSaleAttrId,
-                    saleAttrValueName: item2.saleAttrValueName,
-                  };
-                }),
-              },
-            };
-          }),
-        },
-      },
-    });
+        ...rest
+      }
+    })
+    //处理spuAttr
+    const isExistOfAttrs = await this.prisma.spuAttr.findMany({
+      where: {
+        spuId: spuInfo.id
+      }
+    })
+    const isExistOfAttrIds = isExistOfAttrs.map(item => item.attrId)
+    const addAttrs = filterDuplicates(isExistOfAttrIds,attrs)
+    const deleteAttrs = filterDuplicates(attrs,isExistOfAttrIds)
+    if (addAttrs.length > 0) {
+      await this.prisma.spuAttr.createMany({
+        data: addAttrs.map(item => ({
+          attrId: item,
+          spuId: spuInfo.id
+        }))
+      })
+    }
+    if (deleteAttrs.length > 0) {
+      await this.prisma.spuAttr.deleteMany({
+        where: {
+          spuId: spuInfo.id,
+          attrId: {
+            in: deleteAttrs
+          }
+        }
+      })
+    }
 
-    // 使用Prisma客户端的事务功能执行所有操作
-    return await this.prisma.$transaction([deleteSaleAttr, deleteSpuImg, updateSpu]);
+    //处理spuAttrValue
+    const isExistOfAttrValues = await this.prisma.spuAttrValue.findMany({
+      where: {
+        spuId: spuInfo.id
+      }
+    })
+    const isExistOfAttrValuesIds = isExistOfAttrValues.map(item => item.attrValueId)
+    const addAttrValues = filterDuplicates(isExistOfAttrValuesIds,attrValues)
+    const deleteAttrValues = filterDuplicates(attrValues,isExistOfAttrValuesIds)
+    if (addAttrValues.length > 0) {
+      await this.prisma.spuAttrValue.createMany({
+        data: addAttrValues.map(item => ({
+          attrValueId: item,
+          spuId: spuInfo.id
+        }))
+      })
+    }
+    if (deleteAttrValues.length > 0) {
+      await this.prisma.spuAttrValue.deleteMany({
+        where: {
+          spuId: spuInfo.id,
+          attrValueId: {
+            in:deleteAttrValues
+          }
+        }
+      })
+    }
+    //处理spuImage
+    const isExistOfImages = await this.spuImageList(spuInfo.id)
+    const isExistOfImageIds = isExistOfImages.map(item => item.url)
+    const addImageUrls = filterDuplicates(isExistOfImageIds,spuImageList)
+    const deleteImageUrls = filterDuplicates(spuImageList,isExistOfImageIds)
+    if (addImageUrls.length > 0) {
+      const addPromises = addImageUrls.map(async item => {
+        const data:IUpdateTidDto = {
+          type: 3,
+          tid: spuInfo.id,
+          logoUrl: item,
+        }
+        return this.fileService.addImageRelation(data);
+      });
+      const imageRelations = await Promise.all(addPromises);
+      const imageIds = imageRelations.map(item => item.imageId)
+      await this.prisma.spuImage.createMany({
+        where: {
+          imageId: {
+            in: imageIds,
+            spuId: spuInfo.id
+          }
+        }
+      })
+    }
+    if (deleteImageUrls.length > 0) {
+      const relationIdsPromises = deleteImageUrls.map(async url => {
+        const body = {
+          type: 3,
+          tid: spuInfo.id,
+          logoUrl: url
+        }
+        return this.fileService.selectImageRelationByUrl(body)
+      })
+      const relations = await Promise.all(relationIdsPromises);
+      for (const relation of relations) {
+        await this.fileService.removeImageRelation(relation.id)
+      }
+    }
+    // 可使用Prisma客户端的事务功能执行所有操作，但这里暂时不会用
+    return spu
   }
 
   /**
@@ -219,7 +289,7 @@ export class SpuService {
 
   /**
    * 查找spu的图片列表
-   * @param id
+   * @param id spuId
    */
   async spuImageList(id: number) {
     const images = await this.prisma.spuImage.findMany({
