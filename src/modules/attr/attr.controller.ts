@@ -35,9 +35,15 @@ export class AttrController {
     return this.attrService.saveAttrInfo(body,2)
   }
 
-  @ApiOperation({summary:'删除属性'})
+  @ApiOperation({summary:'删除属性同时会删除相应的属性值以及与spu的关系'})
   @Delete('deleteAttr/:id')
   deleteAttr(@Param('id') id: number) {
     return this.attrService.deleteAttr(id);
+  }
+
+  @ApiOperation({summary:'获取所有spu销售属性'})
+  @Get('baseSaleAttrList')
+  baseSaleAttrList() {
+    return this.attrService.saleAttrInfoList();
   }
 }

@@ -1,6 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { AttrService } from '../attr/attr.service';
 import { ICreateSpuDTO } from './spu.dto';
 import { FileService } from '../file/file.service';
 import { IUpdateTidDto } from '../file/file.dto';
@@ -12,9 +11,8 @@ import { filterDuplicates } from '../../utils';
 @Injectable()
 export class SpuService {
   constructor(private readonly prisma : PrismaService,
-              private readonly attrService: AttrService,
               private readonly fileService: FileService,
-              private readonly skuService: SkuService,) {
+              private readonly skuService: SkuService) {
   }
 
   /**
@@ -161,12 +159,10 @@ export class SpuService {
       const imageRelations = await Promise.all(addPromises);
       const imageIds = imageRelations.map(item => item.imageId)
       await this.prisma.spuImage.createMany({
-        where: {
-          imageId: {
-            in: imageIds,
-            spuId: spuInfo.id
-          }
-        }
+        data: imageIds.map(item => ({
+          imageId: item,
+          spuId: spuInfo.id
+        }))
       })
     }
     if (deleteImageUrls.length > 0) {

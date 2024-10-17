@@ -2,13 +2,12 @@ import { Body, Controller, Delete, Get, Param, Post, Query } from '@nestjs/commo
 import { SpuService } from './spu.service';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { CreateSpuDTO, ICreateSpuDTO } from './spu.dto';
-import { AttrService } from '../attr/attr.service';
 
 @ApiBearerAuth()
 @ApiTags('spu管理')
 @Controller('spu')
 export class SpuController {
-  constructor(private readonly spuService: SpuService,private readonly attrService: AttrService) {}
+  constructor(private readonly spuService: SpuService) {}
 
   @ApiOperation({summary:'查看sku图片列表'})
   @Get('spuImageList/:id')
@@ -20,12 +19,6 @@ export class SpuController {
   @Get('spuSaleAttrList/:id')
   spuSaleAttrList(@Param('id') id: number) {
     return this.spuService.spuSaleAttrList(id);
-  }
-
-  @ApiOperation({summary:'获取所有spu销售属性'})
-  @Get('baseSaleAttrList')
-  baseSaleAttrList() {
-    return this.attrService.saleAttrInfoList();
   }
 
   @ApiOperation({summary:'新增spu'})
@@ -48,7 +41,7 @@ export class SpuController {
     return this.spuService.findBySpuId(id);
   }
 
-  @ApiOperation({summary:'根据spu的id删除spu'})
+  @ApiOperation({summary:'根据spu的id删除spu（关联的sku会被删除，图片、属性值和属性关系会被删除）'})
   @Delete('deleteSpu/:id')
   deleteSpu(@Param('id') id: number) {
     return this.spuService.deleteSpu(id);
