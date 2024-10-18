@@ -247,18 +247,19 @@ export class UserService {
         id: userId
       },
       include: {
-        roles: true
-        // roles: {
-        //   include: {
-        //     role: {
-        //       menus: {
-        //         include: {
-        //           menu: true
-        //         }
-        //       }
-        //     }
-        //   }
-        // }
+        roles: {
+          include: {
+            role: {
+              include: {
+                menus: {
+                  include: {
+                    menu: true
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     })
   }
