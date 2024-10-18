@@ -58,8 +58,33 @@ export class AuthService {
 
 
   async info(request) {
-    const userId = request.userId;
+    const userId = request.user.userId
     const info = await this.userService.findByUserId(userId)
-    return info
+    const username = info.username
+    //头像功能暂时写死
+    const avatar = 'https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif'
+    const routes = ['Acl','Product']
+    const buttons = []
+    const roles = []
+    info.roles.forEach((roleUser) => {
+      if (roleUser.role.roleName) {
+        roles.push(roleUser.role.roleName)
+      }
+      roleUser.role.menus.forEach((roleMenu) => {
+        const code = roleMenu.menu.code
+        if (code) {
+          buttons.push(code)
+        }
+      })
+    })
+
+    return {
+      userId,
+      username,
+      avatar,
+      routes,
+      buttons,
+      roles
+    }
   }
 }
