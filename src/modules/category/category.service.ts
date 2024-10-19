@@ -2,6 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CategoryLevel } from './enum';
 import { ICreateCategoryDto, IUpdateCategoryDto } from './category.dto';
+import { formatDao, formatDateTime } from '../../utils';
 
 @Injectable()
 export class CategoryService {
@@ -21,6 +22,10 @@ export class CategoryService {
     });
   }
 
+  /**
+   * 根据id查分类数据
+   * @param id
+   */
   selectOne(id: number) {
     return this.prisma.category.findUnique({
       where: {
@@ -46,13 +51,14 @@ export class CategoryService {
    */
   async updateCategory(body: IUpdateCategoryDto) {
     await this.checkName(body)
-    const id = body.id;
-    delete body.id;
+    const {id, ...item} = body
     return this.prisma.category.update({
       where: {
         id
       },
-      data: body,
+      data: {
+        ...item
+      },
     })
   }
 
@@ -61,9 +67,36 @@ export class CategoryService {
    * @param id
    */
   async deleteCategory(id: number) {
-    const ids = [id]
-    await this.selectChildrenIdList(ids)
-    return this.deleteByIds(ids)
+    const targetIds = await this.selectChildrenIdList([id])
+    const relationOfAttr = await this.prisma.Attr.findMany({
+      where: {
+        categoryId: {
+          in: targetIds
+        }
+      },
+      select: {
+        attrName: true
+      }
+    })
+    if (relationOfAttr.length > 0) {
+      const attrNames = relationOfAttr.map((item) => item.attrName)
+      throw new HttpException(`存在与属性${attrNames.join(',')}关联，请先删除关联`,HttpStatus.OK)
+    }
+    const relationOfSpu = await this.prisma.Spu.findMany({
+      where: {
+        categoryId: {
+          in: targetIds
+        }
+      },
+      select: {
+        spuName: true
+      }
+    })
+    if (relationOfSpu.length > 0) {
+      const spuNames = relationOfSpu.map((item) => item.spuName)
+      throw new HttpException(`存在与spu${spuNames.join(',')}关联，请先删除关联`,HttpStatus.OK)
+    }
+    return this.deleteByIds(targetIds)
   }
 
   /**
@@ -100,16 +133,28 @@ export class CategoryService {
   }
 
   /**
-   * 递归查找子id
-   * @param ids
-   * @private
+   * 根据分类等级查询分类以及子孩子
+   * @param level
    */
-  private async selectChildrenIdList(ids: number[]) {
-    const childrenList = await this.selectIdById(ids)
-    if (childrenList.length > 0) {
-      await this.selectChildrenIdList(childrenList)
+  async getCategoryByLevel(level: number) {
+    const that = this
+    const categoryList = await this.prisma.category.findMany({
+      where: {
+        level
+      }
+    })
+    const formatCategoryList = formatDao(categoryList)
+    async function findChildren(categoryList,level) {
+      for (const category of categoryList) {
+        level = category.level + 1
+        category.children = await that.getCategory(level, category.id)
+        category.createTime = formatDateTime(category.createTime)
+        category.updateTime = formatDateTime(category.updateTime)
+        await findChildren(category.children, level)
+      }
     }
-    ids.push(...childrenList)
+    await findChildren(formatCategoryList, level)
+    return formatCategoryList
   }
 
   /**
@@ -160,5 +205,24 @@ export class CategoryService {
     if (nameRole) {
       throw new HttpException(`类型名称 ${category.name} 已存在，请重新输入新的类型名称`,HttpStatus.OK)
     }
+  }
+
+  /**
+   * 递归查找子id，并返回数组
+   * @param ids
+   * @private
+   */
+  private async selectChildrenIdList(ids: number[]) {
+    const that = this
+    let targetArr = ids
+    async function findChildrenIds(currentIds: number[]) {
+      const childrenList = await that.selectIdById(currentIds)
+      targetArr = targetArr.concat(childrenList)
+      if (childrenList.length > 0) {
+        await findChildrenIds(childrenList)
+      }
+    }
+    await findChildrenIds(ids)
+    return [...new Set(targetArr)]
   }
 }
