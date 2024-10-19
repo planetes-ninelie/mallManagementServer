@@ -16,13 +16,13 @@ export class CategoryController {
     return this.categoryService.getCategory(CategoryLevel.FIRST);
   }
 
-  @ApiOperation({summary:'查询二级分类'})
+  @ApiOperation({summary:'根据一级id查询二级分类'})
   @Get('getCategory2/:id')
   getCategory2(@Param('id') id: number) {
     return this.categoryService.getCategory(CategoryLevel.SECOND, id);
   }
 
-  @ApiOperation({summary:'查询三级分类'})
+  @ApiOperation({summary:'根据二级id查询三级分类'})
   @Get('getCategory3/:id')
   getCategory3(@Param('id') id: number) {
     return this.categoryService.getCategory(CategoryLevel.THIRD, id);
@@ -42,9 +42,15 @@ export class CategoryController {
     return this.categoryService.updateCategory(body)
   }
 
-  @ApiOperation({summary:'根据id删除分类以及子分类（有bug）'})
+  @ApiOperation({summary:'根据id删除分类以及子分类'})
   @Delete('delete/:id')
   deleteCategory(@Param('id') id: number) {
-    // return this.categoryService.deleteCategory(id)
+    return this.categoryService.deleteCategory(id)
+  }
+
+  @ApiOperation({summary:'根据等级查询分类'})
+  @Get('getCategoryByLevel/:level')
+  getCategoryByLevel(@Param('level') level: number) {
+    return this.categoryService.getCategoryByLevel(level);
   }
 }
