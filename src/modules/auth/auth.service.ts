@@ -61,8 +61,10 @@ export class AuthService {
     const userId = request.user.userId
     const info = await this.userService.findByUserId(userId)
     const username = info.username
-    //头像功能暂时写死
-    const avatar = 'https://pic.imgdb.cn/item/66b46ba3d9c307b7e9c2cfaa.jpg'
+    let avatar = ''
+    if (info.image !== null) {
+      avatar = info.image.url
+    }
     const routes = ['Acl','Product']
     const buttons = []
     const roles = []

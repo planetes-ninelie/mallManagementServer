@@ -23,6 +23,14 @@ export class UpdateUserDto extends CreateUserDto{
   updateTime?: string;
   @ApiProperty({ type: String, description: '用户电话',default: '13523458907', required: false })
   phone?: string;
+  avatar?: string;
+}
+
+export class UpdateAvatarDto {
+  @ApiProperty({ type: Number, description: '用户id',default: 0, required: true })
+  id: number;
+  @ApiProperty({ type: String, description: '用户头像url',default: '', required: true })
+  avatar: string;
 }
 
 export class ToAssignRoleDto {
@@ -36,3 +44,4 @@ export interface IQueryUserDto extends QueryUserDto{}
 export interface ICreateUserDto extends UpdateUserDto{}
 export interface IUpdateUserDto extends UpdateUserDto{}
 export interface IToAssignRoleDto extends ToAssignRoleDto {}
+export interface IUpdateAvatarDto extends UpdateAvatarDto {}
