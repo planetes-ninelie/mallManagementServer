@@ -3,9 +3,9 @@ import {
   CreateUserDto,
   ICreateUserDto,
   IQueryUserDto,
-  IToAssignRoleDto,
+  IToAssignRoleDto, IUpdateAvatarDto,
   IUpdateUserDto,
-  ToAssignRoleDto,
+  ToAssignRoleDto, UpdateAvatarDto,
   UpdateUserDto,
 } from './user.dto';
 import { UserService } from './user.service';
@@ -65,5 +65,12 @@ export class UserController {
   @Delete('batchRemove')
   batchRemove(@Body() body: number[]) {
     return this.userService.batchRemove(body);
+  }
+
+  @ApiOperation({summary:"修改用户的头像"})
+  @ApiBody({ type: UpdateAvatarDto })
+  @Put('updateAvatar')
+  updateAvatar(@Body() body: IUpdateAvatarDto) {
+    return this.userService.updateAvatar(body)
   }
 }

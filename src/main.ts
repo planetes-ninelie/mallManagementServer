@@ -21,6 +21,11 @@ async function bootstrap() {
   // 全局拦截器
   app.useGlobalInterceptors(new TransformInterceptor(), new ClassSerializerInterceptor(app.get(Reflector)));
 
+  app.enableCors({
+    origin: ['http://localhost:5173','http://8.138.108.50:2309'], // 替换为你的前端地址
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true, // 如果需要处理 cookie 或认证信息，请设置为 true
+  });
   // useGlobalFilters 优先级是最后一个是最先执行，所以捕获全部的放第一个，会最后执行
   // 如果只有三个全局过滤器，顺序 useGlobalFilters(3,2,1)
   app.useGlobalFilters(new AllExceptionsFilter(), new HttpExceptionFilter(), new PrismaExceptionFilter());

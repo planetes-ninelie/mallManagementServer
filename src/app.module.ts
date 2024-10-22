@@ -3,7 +3,6 @@ import { RouterModule } from '@nestjs/core';
 import { AuthModule } from './modules/auth/auth.module';
 import { MenuModule } from './modules/menu/menu.module';
 import { PrismaModule } from './modules/prisma/prisma.module';
-import { ProductModule } from './modules/product/product.module';
 import { RoleModule } from './modules/role/role.module';
 import { TrademarkModule } from './modules/trademark/trademark.module';
 import { UploadModule } from './modules/upload/upload.module';
