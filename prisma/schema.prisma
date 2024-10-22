@@ -23,6 +23,8 @@ model User {
   username   String
   password   String
   phone      String?
+  imageId    Int?     @map("image_id")
+  image      Image?   @relation(fields: [imageId], references: [id])
   createTime DateTime @default(now()) @map("createTime")
   updateTime DateTime @updatedAt @map("updateTime")
 
@@ -81,6 +83,7 @@ model Image {
   trademark     Trademark[]
   imageRelation ImageRelation[]
   skus          Sku[]
+  users         User[]
 
   @@map("image")
 }

@@ -1,13 +1,14 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { successList } from 'src/utils/response';
 import { PrismaService } from '../prisma/prisma.service';
-import { ICreateUserDto, IUpdateUserDto } from './user.dto';
+import { ICreateUserDto, IUpdateAvatarDto, IUpdateUserDto } from './user.dto';
 import { md5 } from '../../utils';
+import { FileService } from '../file/file.service';
 
 // noinspection Annotator
 @Injectable()
 export class UserService {
-  constructor(private readonly prisma: PrismaService) {
+  constructor(private readonly prisma: PrismaService,private readonly fileService: FileService) {
   }
 
   /**
@@ -63,6 +64,11 @@ export class UserService {
                 role: true,
               },
             },
+            image: {
+              select: {
+                url:true
+              }
+            }
           },
         }),
         count: await prisma.user.count({
@@ -75,15 +81,22 @@ export class UserService {
         }),
       };
     });
-    const userVo = userRole.map(user => ({
-      id: user.id,
-      name: user.name,
-      phone: user.phone,
-      createTime: user.createTime,
-      updateTime: user.updateTime,
-      username: user.username,
-      roleName: user.roles.map(item => item.role.roleName).join(' ')
-    }));
+    const userVo = userRole.map(user => {
+      let avatar = null
+      if (user.image !== null) {
+        avatar = user.image.url
+      }
+      return {
+        id: user.id,
+        name: user.name,
+        phone: user.phone,
+        createTime: user.createTime,
+        updateTime: user.updateTime,
+        username: user.username,
+        roleName: user.roles.map(item => item.role.roleName).join(' '),
+        avatar
+      }
+    });
     // 返回分页信息和查询结果
     return successList(userVo, { pageNum, pageSize, count });
   }
@@ -259,7 +272,41 @@ export class UserService {
               }
             }
           }
-        }
+        },
+        image: true
+      }
+    })
+  }
+
+
+  /**
+   * 根据用户id和图片url修改头像
+   * @param body
+   */
+  async updateAvatar(body: IUpdateAvatarDto) {
+    const imageRelation= {
+      type: 1,
+      tid: body.id,
+      logoUrl: body.avatar
+    }
+    const findExist = await this.fileService.selectImageRelationByUrl(imageRelation)
+    const userOld = await this.findByUserId(body.id)
+    if (userOld.image !== null) {
+      const userOldDto = {
+        type: 1,
+        tid: body.id,
+        imageId: userOld.image.id
+      }
+      const imageRelationOld = await this.fileService.selectImageRelation(userOldDto)
+      await this.fileService.removeImageRelation(imageRelationOld.id)
+    }
+    const nowImageRelation = await this.fileService.addImageRelation(imageRelation)
+    return this.prisma.user.update({
+      where: {
+        id: body.id
+      },
+      data: {
+        imageId: nowImageRelation.imageId
       }
     })
   }

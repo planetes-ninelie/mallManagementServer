@@ -13,7 +13,13 @@ export class UploadService {
   constructor(@Inject(REQUEST) private request: Request,private readonly prisma: PrismaService) {}
 
   async uploadFile(file): Promise<string> {
-    const fileName = Date.now() + extname(file.originalname);
+    let name = 'chang'
+    if (file.originalname == undefined || file.originalname == '.jpg') {
+      name = (Math.random() * 10000).toFixed(0) + '.jpg'
+    } else {
+      name = file.originalname;
+    }
+    const fileName = Date.now() + extname(name);
     try {
       // 检查文件类型是否为图片
       const isImage = this.isImage(file);
@@ -41,7 +47,7 @@ export class UploadService {
       const data = {
         num: 0,
         url: `${this.getHostAndPort()}/${uploadPath}`,
-        name: file.originalname,
+        name: name,
         hash, // 将哈希值保存到数据库
       };
       await this.prisma.image.create({
