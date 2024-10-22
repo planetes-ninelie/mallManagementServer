@@ -13,7 +13,12 @@ export class UploadService {
   constructor(@Inject(REQUEST) private request: Request,private readonly prisma: PrismaService) {}
 
   async uploadFile(file): Promise<string> {
-    const name = file.originalname;
+    let name = 'chang'
+    if (file.originalname == undefined || file.originalname == '.jpg') {
+      name = (Math.random() * 10000).toFixed(0) + '.jpg'
+    } else {
+      name = file.originalname;
+    }
     const fileName = Date.now() + extname(name);
     try {
       // 检查文件类型是否为图片
@@ -70,12 +75,11 @@ export class UploadService {
         where: { OR: [{ id }, { url } ] },
       });
       if (!fileRecord) {
-        return "文件记录不存在"
-        // throw new HttpException('文件记录不存在',HttpStatus.OK);
+        throw new HttpException('文件记录不存在',HttpStatus.OK);
       }
       if (fileRecord.num > 0) {
         // throw new HttpException('文件存在引用',HttpStatus.OK);
-        return "文件存在引用"
+        return
       }
       // 删除文件系统中的文件
       const filePath = fileRecord.url.split('/').slice(-2).join('/');
