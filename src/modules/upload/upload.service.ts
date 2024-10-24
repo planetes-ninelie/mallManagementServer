@@ -105,8 +105,10 @@ export class UploadService {
   }
 
   private getHostAndPort(): string {
-    const host = this.request?.headers['host'];
-    return `http://${host}`;
+    // const host = this.request?.headers['host'];
+    // return `http://${host}`;
+    const referer = this.request?.headers['referer']
+    return referer + 'api'
   }
 
   private isImage(file: Express.Multer.File): boolean {
