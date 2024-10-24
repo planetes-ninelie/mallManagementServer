@@ -39,6 +39,7 @@ export class CategoryService {
    * @param body
    */
   async createCategory(body: ICreateCategoryDto) {
+    if(body.id === -1) delete body.id
     await this.role(body)
     return this.prisma.category.create({
       data: body,

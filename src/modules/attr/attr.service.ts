@@ -241,7 +241,7 @@ export class AttrService {
       attrs = await this.findBySaleName(body.attrName,2)
     }
     const attrNameRole = (attrs.length > 0 && body.id === 0) ||
-      (attrs.length > 1 && body.id > 0) || (attrs.length === 1 && body.id > 0 && body.id !== attrs.id)
+      (attrs.length > 1 && body.id > 0) || (attrs.length === 1 && body.id > 0 && body.id !== attrs[0].id)
     if (attrNameRole) {
       throw new HttpException(`属性名称 ${body.attrName} 已存在！`, HttpStatus.OK);
     }
